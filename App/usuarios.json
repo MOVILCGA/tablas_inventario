@@ -1,0 +1,207 @@
+{
+    "AdmCGA": {
+        "password": "99,.-@ASKPJC",
+        "nombre": "Usuario principal"
+    },
+    "AdmTI": {
+        "password": "h$0T+pjrqtE5",
+        "nombre": "Administrador TI",
+        "es_admin": true,
+        "puede_gestionar": true
+    },
+    "Ppc": {
+        "password": "Ppc156819*/*1",
+        "nombre": "Ppc"
+    },
+    "nicopuentes": {
+        "password": "nico1012*",
+        "nombre": "Nicolas Puentes",
+        "es_admin": true
+    },
+    "fernandolesmes": {
+        "password": "123456",
+        "nombre": "FERNADNDO LESMES",
+        "es_admin": true,
+        "puede_gestionar": true
+    },
+    "alfonsoguzman": {
+        "password": "123456",
+        "nombre": "Alfonso Guzman Nicolas",
+        "es_admin": false
+    },
+    "alvarezpuerto": {
+        "password": "123456",
+        "nombre": "Alvarez Puerto Stephanny Johanna",
+        "es_admin": false
+    },
+    "arandiabeltran": {
+        "password": "123456",
+        "nombre": "Arandia Beltran Cristian Camilo",
+        "es_admin": false
+    },
+    "belañocalderon": {
+        "password": "123456",
+        "nombre": "Beleño Calderon Jair Andres",
+        "es_admin": false
+    },
+    "benavidescerezo": {
+        "password": "123456",
+        "nombre": "Benavides Cerezo Edward",
+        "es_admin": false
+    },
+    "casascastaño": {
+        "password": "123456",
+        "nombre": "Casas Castaño Doris Astrid",
+        "es_admin": false
+    },
+    "castrillontobon": {
+        "password": "123456",
+        "nombre": "Castrillon Tobon Carlos Mario",
+        "es_admin": false
+    },
+    "corredorcardozo": {
+        "password": "123456",
+        "nombre": "Corredor Cardozo Juan Pablo",
+        "es_admin": false
+    },
+    "diazgaravito": {
+        "password": "123456",
+        "nombre": "Diaz Garavito Wilson Hernando",
+        "es_admin": false
+    },
+    "duarteparra": {
+        "password": "123456",
+        "nombre": "Duarte Parra Josue Abisai",
+        "es_admin": false
+    },
+    "florianhernandez": {
+        "password": "123456",
+        "nombre": "Florian Hernandez Oscar Leonardo",
+        "es_admin": false
+    },
+    "fonsecasosa": {
+        "password": "123456",
+        "nombre": "Fonseca Sosa Edgar Alfonso",
+        "es_admin": false
+    },
+    "foreroperalta": {
+        "password": "123456",
+        "nombre": "Forero Peralta Oscar Orlando",
+        "es_admin": false
+    },
+    "galindocañon": {
+        "password": "123456",
+        "nombre": "Galindo Cañon Leidy Tatiana",
+        "es_admin": false
+    },
+    "garciarojas": {
+        "password": "123456",
+        "nombre": "Garcia Rojas Yesid Reynaldo",
+        "es_admin": false
+    },
+    "martinbabativa": {
+        "password": "123456",
+        "nombre": "Martin Babativa Juan Daniel",
+        "es_admin": false
+    },
+    "martinezgutierrez": {
+        "password": "123456",
+        "nombre": "Martinez Gutierrez Karen Dayana",
+        "es_admin": false
+    },
+    "mendozagarcia": {
+        "password": "123456",
+        "nombre": "Mendoza Garcia Jose Santiago",
+        "es_admin": false
+    },
+    "murciabello": {
+        "password": "123456",
+        "nombre": "Murcia Bello Lizeth Astrid",
+        "es_admin": false
+    },
+    "olayamoreira": {
+        "password": "123456",
+        "nombre": "Olaya Moreira Sandra Paola",
+        "es_admin": false
+    },
+    "orjuelaramos": {
+        "password": "123456",
+        "nombre": "Orjuela Ramos Antonio",
+        "es_admin": false
+    },
+    "ospinamartinez": {
+        "password": "123456",
+        "nombre": "Ospina Martinez Alejandro",
+        "es_admin": false
+    },
+    "peraltamahecha": {
+        "password": "123456",
+        "nombre": "Peralta Mahecha Luis Daniel",
+        "es_admin": false
+    },
+    "perezortiz": {
+        "password": "123456",
+        "nombre": "Perez Ortiz Angel Mauricio",
+        "es_admin": false
+    },
+    "pulidoleguizamon": {
+        "password": "123456",
+        "nombre": "Pulido Leguizamon Fabian Leonardo",
+        "es_admin": false
+    },
+    "quitoracampos": {
+        "password": "123456",
+        "nombre": "Quitora Campos Wesley",
+        "es_admin": false
+    },
+    "ramirezagudelo": {
+        "password": "123456",
+        "nombre": "Ramirez Agudelo Juan Camilo",
+        "es_admin": false
+    },
+    "reyessanchez": {
+        "password": "123456",
+        "nombre": "Reyes Sanchez William",
+        "es_admin": false
+    },
+    "rozoroncancio": {
+        "password": "123456",
+        "nombre": "Rozo Roncancio Alexander",
+        "es_admin": false
+    },
+    "ruizluque": {
+        "password": "123456",
+        "nombre": "Ruiz Luque Cristian David",
+        "es_admin": false
+    },
+    "tarazonagonzalez": {
+        "password": "123456",
+        "nombre": "Tarazona Gonzalez Fabio Andres",
+        "es_admin": false
+    },
+    "valdesmuñoz": {
+        "password": "123456",
+        "nombre": "Valdes Muñoz Janeth Viviana",
+        "es_admin": false
+    },
+    "valenciasolarte": {
+        "password": "123456",
+        "nombre": "Valencia Solarte Maria Jimena",
+        "es_admin": false
+    },
+    "xiquesmorales": {
+        "password": "123456",
+        "nombre": "Xiques Morales Javier Enrique",
+        "es_admin": false
+    },
+    "UsuarioAlternativo": {
+        "password": "User_CGA_123*",
+        "nombre": "Usuario 3"
+    },
+    "fabiorodriguez": {
+        "password": "123456",
+        "nombre": "FabioRodriguez",
+        "es_admin": true,
+        "puede_gestionar": true
+    }
+}

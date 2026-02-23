@@ -1,0 +1,384 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    background: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
+                url('../image/imagen_33.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    margin: 0;
+    padding: 20px;
+    font-family: 'Arial', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-container {
+    background: rgb(255, 255, 255);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.login-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.logo {
+    max-width: 100%;
+    height: auto;
+    width: auto;
+    max-height: 150px;
+}
+
+.login-title {
+    font-size: 1.8rem;
+    color: #0d2a7a;
+    margin: 0;
+    font-weight: bold;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #003366;
+    display: block;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #b4b3b3;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    color: #003366;
+    font-family: inherit;
+    min-height: 44px;
+}
+
+.form-group input:hover {
+    border-color: #0050a0;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #003399;
+    box-shadow: 0 0 5px rgba(0, 51, 153, 0.3);
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #1847ca 0%, #0d2a7a 100%);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s;
+    min-height: 48px;
+    touch-action: manipulation;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(24, 71, 202, 0.4);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.flash-messages {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #f5c6cb;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.flash-messages p {
+    margin: 5px 0;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN PARA MÓVILES - LOGIN
+   ============================================ */
+
+/* Tablet y móviles grandes (hasta 768px) */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 15px;
+    }
+    
+    .login-container {
+        padding: 30px 20px;
+        max-width: 100%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    .logo {
+        max-height: 140px;
+        margin-bottom: 15px;
+    }
+    
+    .login-title {
+        font-size: 1.6rem;
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+        gap: 6px;
+    }
+    
+    .form-group label {
+        font-size: 0.95rem;
+    }
+    
+    .form-group input {
+        padding: 12px 10px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+    
+    .btn-login {
+        padding: 12px 20px;
+        font-size: 15px;
+        min-height: 44px;
+        margin-top: 8px;
+    }
+    
+    .flash-messages {
+        font-size: 13px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+}
+
+/* Móviles medianos (hasta 640px) */
+@media (max-width: 640px) {
+    body {
+        padding: 15px 12px;
+    }
+    
+    .login-container {
+        padding: 25px 15px;
+        border-radius: 10px;
+    }
+    
+    .logo {
+        max-height: 130px;
+    }
+    
+    .login-title {
+        font-size: 1.5rem;
+    }
+    
+    .form-group input {
+        padding: 11px 9px;
+        font-size: 16px;
+    }
+}
+
+/* Móviles pequeños (hasta 480px) */
+@media (max-width: 480px) {
+    body {
+        padding: 12px 10px;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .login-container {
+        padding: 20px 12px;
+        max-width: 100%;
+        border-radius: 10px;
+    }
+    
+    .login-content {
+        gap: 15px;
+    }
+    
+    .logo {
+        max-height: 120px;
+        margin-bottom: 10px;
+    }
+    
+    .login-title {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+        gap: 6px;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .form-group input {
+        padding: 10px 8px;
+        font-size: 16px;
+        min-height: 44px;
+        border-radius: 6px;
+    }
+    
+    .btn-login {
+        padding: 12px 15px;
+        font-size: 15px;
+        min-height: 44px;
+        margin-top: 6px;
+        font-weight: bold;
+    }
+    
+    .flash-messages {
+        font-size: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+}
+
+/* Móviles muy pequeños (hasta 360px) */
+@media (max-width: 360px) {
+    body {
+        padding: 10px 8px;
+    }
+    
+    .login-container {
+        padding: 18px 10px;
+        border-radius: 8px;
+    }
+    
+    .logo {
+        max-height: 110px;
+        margin-bottom: 8px;
+    }
+    
+    .login-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    .form-group label {
+        font-size: 0.85rem;
+    }
+    
+    .form-group input {
+        padding: 10px 8px;
+        font-size: 16px;
+    }
+    
+    .btn-login {
+        padding: 10px 12px;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    .flash-messages {
+        padding: 8px;
+        font-size: 11px;
+    }
+}
+
+/* Orientación landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+    body {
+        min-height: 100vh;
+        padding: 10px;
+    }
+    
+    .login-container {
+        padding: 15px 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .logo {
+        max-height: 100px;
+        margin-bottom: 10px;
+    }
+    
+    .login-title {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    .form-group input {
+        padding: 8px;
+        min-height: 40px;
+    }
+    
+    .btn-login {
+        padding: 10px 20px;
+        min-height: 40px;
+        margin-top: 5px;
+    }
+}
+
+/* Optimización de tocable para dispositivos táctiles */
+@media (hover: none) and (pointer: coarse) {
+    button,
+    .btn-login {
+        min-height: 48px;
+        padding: 14px 18px;
+        font-size: 16px;
+    }
+    
+    input,
+    select,
+    textarea {
+        min-height: 48px;
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    .form-group input:focus {
+        border-color: #1847ca;
+    }
+}
+

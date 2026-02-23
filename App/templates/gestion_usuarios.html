@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d2a7a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <title>Gestión de Usuarios</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='CSS/Estilos.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='CSS/gestion_usuarios.css') }}">
+
+  <link rel="icon"
+        type="image/x-icon"
+        href="{{ url_for('static', filename='imagen_31-remove_fondo.ico') }}">
+
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="apple-touch-icon"
+        href="{{ url_for('static', filename='image/imagen_31-remove_fondo.png') }}">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<div class="encabezado">
+  <a href="/" class="logo-link">
+    <img src="{{ url_for('static', filename='image/Logo-CGA-Horizontal-Negativo.png') }}"
+         alt="Logo_CGA"
+         id="logo_inicio">
+  </a>
+
+  <nav class="nav-buttons">
+    <a href="{{ url_for('logout') }}" class="cerrar_se">Cerrar Sesión</a>
+  </nav>
+</div>
+
+
+<!-- ================= CONTENIDO ================= -->
+<div class="gestion-container">
+
+  <div class="gestion-header">
+    <h1 class="gestion-title">Gestión de Usuarios</h1>
+    <a href="{{ url_for('seleccion_db') }}" class="btn-volver">Regresar</a>
+  </div>
+
+  <div id="mensaje" class="mensaje"></div>
+
+  <div class="usuarios-section">
+
+    <!-- ========= CREAR USUARIO ========= -->
+    <div class="crear-usuario-card">
+      <h2 class="card-title">Crear Nuevo Usuario</h2>
+
+      <form id="formCrearUsuario" autocomplete="off">
+
+        <div class="form-group-usuario">
+          <label for="nuevo_username">Usuario</label>
+          <input type="text"
+                 id="nuevo_username"
+                 name="username"
+                 required
+                 placeholder="Ingrese nombre de usuario"
+                 autocomplete="off">
+        </div>
+
+        <div class="form-group-usuario">
+          <label for="nuevo_password">Contraseña</label>
+          <input type="password"
+                 id="nuevo_password"
+                 name="password"
+                 required
+                 placeholder="Mínimo 6 caracteres"
+                 autocomplete="off">
+        </div>
+
+        <div class="form-group-usuario">
+          <label for="nuevo_nombre">Nombre Completo</label>
+          <input type="text"
+                 id="nuevo_nombre"
+                 name="nombre"
+                 required
+                 placeholder="Ingrese nombre completo"
+                 autocomplete="off">
+        </div>
+
+        <!-- ===== Tipo usuario accesible ===== -->
+        <div class="form-group-usuario">
+          <label>Tipo de usuario</label>
+
+          <div role="radiogroup" aria-label="Tipo de usuario">
+
+            <input type="radio"
+                   name="es_admin"
+                   id="usuario_normal"
+                   value="false"
+                   checked
+                   hidden>
+
+            <label for="usuario_normal" class="btn-tipo-usuario">
+              Usuario
+            </label>
+
+            <input type="radio"
+                   name="es_admin"
+                   id="usuario_admin"
+                   value="true"
+                   hidden>
+
+            <label for="usuario_admin" class="btn-tipo-usuario">
+              Administrador
+            </label>
+
+          </div>
+        </div>
+
+        <button type="submit" class="btn-crear">Crear Usuario</button>
+      </form>
+    </div>
+
+
+    <!-- ========= LISTA USUARIOS ========= -->
+    <div class="lista-usuarios-card">
+      <h2 class="card-title">Usuarios Registrados</h2>
+
+      <div class="usuarios-lista" id="usuariosLista">
+
+        {% for usuario in usuarios %}
+        <div class="usuario-item" role="listitem">
+
+          <div class="usuario-info">
+
+            <div class="usuario-nombre">
+              <strong>{{ usuario.username }}</strong>
+
+              {% if usuario.sesion_activa %}
+              <span class="sesion-activa">Sesión Activa</span>
+              {% endif %}
+
+              {% if usuario.es_admin %}
+              <span class="admin-badge">ADMIN</span>
+
+              {% if usuario.puede_gestionar %}
+              <span class="gestion-badge">GESTIÓN</span>
+              {% endif %}
+              {% endif %}
+            </div>
+
+            <div class="usuario-datos">
+              <span class="usuario-nombre-completo">
+                {{ usuario.nombre }}
+              </span>
+
+              {% if es_admin_principal %}
+              <span class="password-inline">
+                <span class="password-label-inline">CC:</span>
+                <span class="password-text">{{ usuario.password }}</span>
+              </span>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <!-- ✅ BOTÓN CORREGIDO -->
+          <button
+            class="btn-eliminar"
+            onclick="eliminarUsuario('{{ usuario.username }}')"
+            aria-label="Eliminar usuario {{ usuario.username }}"
+            {% if usuario.username == "AdmCGA" %}disabled{% endif %}
+          >
+            Eliminar
+          </button>
+
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================= SCRIPT ================= -->
+<script>
+
+function mostrarMensaje(texto, tipo) {
+  const mensaje = document.getElementById("mensaje");
+  mensaje.textContent = texto;
+  mensaje.className = `mensaje ${tipo}`;
+  mensaje.style.display = "block";
+
+  setTimeout(() => {
+    mensaje.style.display = "none";
+  }, 5000);
+}
+
+
+document.getElementById("formCrearUsuario")
+.addEventListener("submit", async function (e) {
+
+  e.preventDefault();
+
+  const formData = {
+    username: document.getElementById("nuevo_username").value.trim(),
+    password: document.getElementById("nuevo_password").value.trim(),
+    nombre: document.getElementById("nuevo_nombre").value.trim(),
+    es_admin:
+      document.querySelector('input[name="es_admin"]:checked').value === "true"
+  };
+
+  try {
+    const response = await fetch("/crear_usuario", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      mostrarMensaje(data.message, "success");
+      document.getElementById("formCrearUsuario").reset();
+
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      mostrarMensaje(data.error || "Error al crear usuario", "error");
+    }
+
+  } catch (error) {
+    mostrarMensaje("Error de conexión.", "error");
+    console.error(error);
+  }
+});
+
+
+async function eliminarUsuario(username) {
+
+  if (!confirm(`¿Eliminar al usuario "${username}"?`)) return;
+
+  try {
+    const response = await fetch("/eliminar_usuario", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      mostrarMensaje(data.message, "success");
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      mostrarMensaje(data.error || "Error al eliminar", "error");
+    }
+
+  } catch (error) {
+    mostrarMensaje("Error de conexión.", "error");
+    console.error(error);
+  }
+}
+
+</script>
+
+</body>
+</html>

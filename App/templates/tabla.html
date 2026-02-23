@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+    />
+    <meta name="theme-color" content="#0d2a7a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Tablas CGA" />
+    <title>Visualización tablas</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='CSS/Estilos.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='imagen_31-remove_fondo.ico') }}"
+      size="32x32"
+    />
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('manifest') }}" />
+    <!-- Apple Touch Icon para iOS -->
+    <link
+      rel="apple-touch-icon"
+      href="{{ url_for('static', filename='image/imagen_31-remove_fondo.png') }}"
+    />
+  </head>
+  <body>
+    <div class="encabezado">
+      <a href="/" class="logo-link">
+        <img
+          src="{{ url_for('static', filename='/image/Logo-CGA-Horizontal-Negativo.png') }}"
+          alt="Logo_CGA"
+          id="logo_inicio"
+        />
+      </a>
+      <div class="nav-buttons">
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('gestion_usuarios') }}" class="cerrar_se">
+          Gestión de Usuarios
+        </a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="cerrar_se"> Cerrar Sesión </a>
+      </div>
+    </div>
+
+    <div class="selector-tabla-container">
+      <label for="selectorTabla">Selecciona la tabla que quieres ver:</label>
+      <select
+        id="selectorTabla"
+        onchange="cargarTablaSeleccionada()"
+        aria-label="Seleccione lo que desea ver"
+      >
+        <option value="" disabled selected>-- Seleccione lo que desea ver --</option>
+        {% for tabla in tablas_disponibles %}
+        <option value="{{ tabla.clave }}">{{ tabla.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Contenedor para botón Cliente y campo Número de Orden lado a lado -->
+    <div
+      id="contenedorBusqueda"
+      class="contenedor-busqueda"
+      style="display: none"
+    >
+      <!-- Campo Número de Orden (solo para ztbsd_seg_ped) -->
+      <div id="campoOrdenExterno" class="campo-orden-container">
+        <label for="aufnr"># Pedido:</label>
+        <input
+          type="text"
+          id="aufnr"
+          placeholder="Ejm. 11210340...."
+          autocomplete="off"
+          inputmode="numeric"
+        />
+      </div>
+
+      <button
+        class="crear-btn boton-buscar boton-cliente"
+        onclick="abrirModalAvanzado()"
+        type="button"
+      >
+        Cliente
+      </button>
+    </div>
+
+    <h1>{% if tabla_actual %} {{ tabla_actual }}{% endif %}</h1>
+
+    <!-- Modal busqueda avanzado (oculto por defecto) para la tabla inventario de la base de datos aitv -->
+    <div id="miModalAvanzado" class="modal-avanzado">
+      <div class="modal-avanzado-content">
+        <div class="modal-avanzado-header">
+          <h2>Consulta por Material</h2>
+          <span class="cerrar-avanzado" onclick="cerrarYLimpiarAvanzado()"
+            >&times;</span
+          >
+        </div>
+        <p>
+          No es necesario llenar todos los campos de filtro <br />para iniciar
+          la busqueda
+        </p>
+        <div class="modal-avanzado-body">
+          <form
+            id="formAvanzada"
+            onsubmit="buscarAvanzado(event)"
+            autocomplete="off"
+          >
+            <div class="form-group">
+              <label for="descripcionMaterial">Material</label>
+              <!-- Versión desktop con datalist -->
+              <div class="desktop-selector">
+                <input
+                  type="text"
+                  id="descripcionMaterial"
+                  class="form-control campo-filtro"
+                  placeholder="Escriba o seleccione un material..."
+                  autocomplete="off"
+                  list="materialesList"
+                />
+                <datalist id="materialesList"></datalist>
+              </div>
+              <!-- Versión móvil con selector personalizado -->
+              <div class="mobile-selector selector-container">
+                <input
+                  type="text"
+                  id="descripcionMaterialMobile"
+                  class="form-control campo-filtro"
+                  placeholder="Escriba o seleccione un material..."
+                  autocomplete="off"
+                />
+                <select
+                  id="selectorMateriales"
+                  class="selector-desplegable"
+                  aria-label="Seleccionar material"
+                >
+                  <option value="">-- Seleccione un material --</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="advMaterial">Cod. Material</label>
+              <input
+                type="text"
+                id="advMaterial"
+                placeholder="Ejm. 90162, 92895...."
+                autocomplete="off"
+                inputmode="numeric"
+              />
+            </div>
+
+            <div class="modal-avanzado-buttons">
+              <button type="submit" class="boton-buscar">Buscar</button>
+              <button
+                type="button"
+                class="boton-limpiar"
+                onclick="limpiarBusquedaAvanzada()"
+              >
+                Limpiar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Modal busqueda avanzado (oculto por defecto) para la tabla Pedids de despacho de la base de datos ai_eop -->
+    <div id="miModalAvanzadoai_eop" class="modal-avanzado">
+      <div class="modal-avanzado-content">
+        <div class="modal-avanzado-header">
+          <h2>Consulta por Cliente</h2>
+          <span class="cerrar-avanzado" onclick="cerrarYLimpiarai_eop()"
+            >&times;</span
+          >
+        </div>
+        <p>
+          No es necesario llenar todos los campos de filtro <br />para iniciar
+          la busqueda
+        </p>
+        <div class="modal-avanzado-body">
+          <form id="formAvanzadaai_eop" onsubmit="buscarAvanzadoai_eop(event)">
+            <div class="form-group">
+              <label for="name1">Cliente</label>
+              <!-- Versión desktop con datalist -->
+              <div class="desktop-selector">
+                <input
+                  type="text"
+                  id="name1"
+                  class="form-control campo-filtro"
+                  placeholder="Escriba o seleccione un cliente..."
+                  autocomplete="off"
+                  list="clientesList"
+                />
+                <datalist id="clientesList"></datalist>
+              </div>
+              <!-- Versión móvil con selector personalizado -->
+              <div class="mobile-selector selector-container">
+                <input
+                  type="text"
+                  id="name1Mobile"
+                  class="form-control campo-filtro"
+                  placeholder="Escriba o seleccione un cliente..."
+                  autocomplete="off"
+                />
+                <select
+                  id="selectorClientes"
+                  class="selector-desplegable"
+                  aria-label="Seleccionar cliente"
+                >
+                  <option value="">-- Seleccione un cliente --</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group-fechas">
+              <div class="form-group fecha-item">
+                <label>Fecha Inicio</label>
+                <input type="date" id="fecha_inicio" autocomplete="off" />
+              </div>
+              <div class="form-group fecha-item">
+                <label>Fecha Fin</label>
+                <input type="date" id="fecha_fin" autocomplete="off" />
+              </div>
+            </div>
+            <div class="modal-avanzado-buttons">
+              <button type="submit" class="boton-buscar">Buscar</button>
+              <button
+                type="button"
+                class="boton-limpiar"
+                onclick="limpiarModalai_eop()"
+              >
+                Limpiar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje principal al seleccionar una tabla antes de busqueda detallada -->
+    <div id="mensajeBusqueda">
+      <p id="textoMensajeBusqueda">
+        <!-- El mensaje se actualizará dinámicamente según la tabla seleccionada -->
+      </p>
+    </div>
+
+    <!-- Contenedor para mostrar el nombre del cliente -->
+    <div
+      id="infoCliente"
+      style="display: none; padding: 10px; border-radius: 8px"
+    >
+      <span style="color: #003366; font-weight: bold; font-size: 30px"
+        >Cliente:
+      </span>
+      <span
+        id="nombreCliente"
+        style="color: #0050a0; font-weight: bold; font-size: 18px"
+      ></span>
+    </div>
+    <div id="scroll-superior-container">
+      <div id="scroll-superior-contenido"></div>
+    </div>
+    <!-- Tabla oculta por defecto donde contiene los datos -->
+    <div class="contenedor-tabla-scroll scroll-container table-wrapper">
+      <div class="table-scroll">
+        <table id="tablaInventario">
+          <thead>
+            <tr>
+              {% for nombre in nombres_columnas %}
+              <th>{{ nombre }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody id="cuerpoTabla">
+            {% for fila in datos %}
+            <tr class="filas">
+              {% for valor in fila %}
+              <td>{{ valor if valor is not none else "" }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Contenedor para el botón regresar -->
+    <div id="contenedor-regresar"></div>
+    <!-- Opciones de paginación cuando supere las 100 filas -->
+    <div
+      id="paginacion"
+      style="text-align: center; margin-top: 20px; display: none"
+    >
+      <button onclick="irAPrimeraPagina()" class="pri-ult">«</button>
+      <button onclick="cambiarPagina(-1)" class="btn-pag">Anterior</button>
+      <span id="num-pagina" style="color: #003366; font-weight: bold"
+        >Página 1</span
+      >
+      <button onclick="cambiarPagina(1)" class="btn-pag">Siguiente</button>
+      <button onclick="irAUltimaPagina()" class="pri-ult">»</button>
+    </div>
+    <div
+      id="totalPaginas"
+      data-value="{{ total_paginas }}"
+      style="display: none"
+    ></div>
+
+    <script>
+      // -- 1. Variables --
+      let paginaActual = 1;
+      let totalPaginasExistentes = parseInt(
+        document.getElementById("totalPaginas").dataset.value,
+      );
+
+      const numeric_cols_inv = [
+        "Centro",
+        "Almacen",
+        "Material",
+        "stock",
+        "VALOR_UNITARIO",
+      ];
+      const date_cols_inv = [];
+      const numeric_cols_ped = [
+        "MANDT",
+        "ID",
+        "VBELN",
+        "KUNNR",
+        "POSNR",
+        "MATNR",
+        "WERKS",
+        "NETWR",
+        "KZWI1",
+        "KZWI2",
+        "BRGEW",
+        "NETPR",
+        "WAVWR",
+        "KZWI3",
+        "KWMENG",
+        "NTGEW",
+        "POSNR_OF",
+        "PERNR_E",
+        "PEDIDO",
+        "KURSK",
+        "PERNR_E2",
+        "DIA",
+        "REN",
+        "UTILIDAD",
+        "POSNR_ENT",
+        "NTGEW_ENT",
+        "LFIMG_ENT",
+        "PESO_CONT",
+        "PESO_NO_CONT",
+        "CANT_ENT",
+        "PEND_ENT",
+        "CANT_FAC",
+        "PEND_FAC",
+        "PEND_ENT_FAC",
+        "DIF_FAC",
+        "DIF_FAC_CTD",
+        "DIF_ENT_CTD",
+        "DIF_ENT",
+        "DIF_ENT_FAC",
+        "VL_PEND_FAC",
+        "VL_PEND_ENT",
+        "VL_PEN_TOT",
+        "VL_FACT",
+        "VALOR_UN_PED",
+        "RFMNG",
+        "PESO_FACT",
+        "RFWRT",
+        "MJAHR",
+        "CANT_TRAS",
+        "PESO_TRAS",
+        "POSNR_CT",
+        "ORDENES",
+        "GJAHR",
+        "MES",
+        "CANTIDAD_ENTREGADA",
+        "DIFERENCIA_ENTREGA",
+      ];
+      const date_cols_ped = [
+        "ERDAT",
+        "ERZET",
+        "VDATU",
+        "FH_CR_ENT",
+        "HR_CR_ENTREGA",
+        "FH_CR_FACT",
+        "HR_CR_FACT",
+        "FECHA_EM_ORD",
+        "ERZET_EM_ORD",
+        "FH_CR_TRAS",
+        "HR_CR_TRAS",
+        "FH_FIN_TRAS",
+        "HR_FIN_TRAS",
+        "FH_CR_OF",
+        "HR_CR_OF",
+        "VDATU_OF",
+        "VDATU_CT",
+        "FECHA_DESP",
+        "VDATU1",
+        "FECHA_ENTREGA_DESPACHOS",
+        "FECHA_RECEPCION",
+      ];
+
+      let orden_col = null;
+      let orden_dir = null;
+      let currentData = null;
+      let currentColumnOrder = [];
+      let currentNombresColumnas = [];
+
+      // Variables para estado de búsqueda
+      let busquedaActual = null;
+      let paginaBusquedaActual = 1;
+      let totalPaginasBusqueda = 1;
+
+      // Inicializar texto de página
+      actualizarTextoPagina();
+
+      // Mostrar/ocultar paginación según total de páginas
+      document.getElementById("paginacion").style.display =
+        totalPaginasExistentes > 1 ? "block" : "none";
+// -- 2. Función para cargar tabla seleccionada --
+      async function cargarTablaSeleccionada() {
+        
+        const selector = document.getElementById("selectorTabla"); // ✅ FALTABA
+        const tabla = selector.value; 
+
+        const botonBusqueda = document.querySelector(".boton-buscar");
+
+        const tablaNombre = selector.options[selector.selectedIndex].text;
+
+        if (tabla === "ztbsd_seg_ped") {
+          document.getElementById("contenedorBusqueda").style.display = "flex"; // Mostrar contenedor con botón y campo
+          // Mostrar campo de orden para ztbsd_seg_ped
+          document.getElementById("campoOrdenExterno").style.display = "flex";
+          // Cambiar texto del botón a "Cliente"
+          const botonCliente = document.querySelector(".boton-cliente");
+          if (botonCliente) {
+            botonCliente.textContent = "Cliente";
+          }
+          // Actualizar mensaje para ztbsd_seg_ped
+          document.getElementById("textoMensajeBusqueda").innerHTML =
+            'Para visualizar los datos del cliente ingresa a <b>"Cliente"</b><br>Si quieres una busqueda mas precisa ingresa el número de orden.';
+          cargarListaClientes(); // Cargar lista de clientes en el select
+          // Configurar búsqueda automática en el campo de orden
+          configurarBusquedaAutomaticaOrden();
+        } else if (tabla === "inventario") {
+          document.getElementById("contenedorBusqueda").style.display = "flex"; // Mostrar contenedor con botón
+          // Ocultar campo de orden para inventario
+          document.getElementById("campoOrdenExterno").style.display = "none";
+          // Cambiar texto del botón a "Material"
+          const botonCliente = document.querySelector(".boton-cliente");
+          if (botonCliente) {
+            botonCliente.textContent = "Material";
+          }
+          // Actualizar mensaje para inventario
+          document.getElementById("textoMensajeBusqueda").innerHTML =
+            'Para visualizar los datos del inventario ingresa a <b>"Material"</b>';
+          cargarListaMateriales(); // Cargar lista de materiales
+        } else {
+          botonBusqueda.style.display = "none";
+          document.getElementById("contenedorBusqueda").style.display = "none";
+        }
+
+        // Si no hay tabla seleccionada, salir
+        if (!tabla) return;
+
+        // Ocultar el selector de tabla
+        document.querySelector(".selector-tabla-container").style.display =
+          "none";
+
+        // Ocultamos la tabla (incluyendo encabezados)
+        document.getElementById("tablaInventario").style.display = "none";
+        // Mostramos el mensaje de aviso
+        document.getElementById("mensajeBusqueda").style.display = "block";
+
+        paginaActual = 1;
+        orden_col = null;
+        orden_dir = null;
+        currentData = null;
+        currentColumnOrder = [];
+        currentNombresColumnas = [];
+
+        // Resetear estado de búsqueda
+        busquedaActual = null;
+        paginaBusquedaActual = 1;
+        totalPaginasBusqueda = 1;
+
+        // Obtener datos de la tabla seleccionada desde el backend
+        try {
+          const resp = await fetch(
+            `/obtener_tabla/${tabla}?pagina=${paginaActual}`,
+          );
+          const json = await resp.json();
+
+          if (json.results) {
+            // renderizarDatos(json);
+
+            // Remover botón Regresar si existe
+            const contenedorRegresar = document.getElementById(
+              "contenedor-regresar",
+            );
+            contenedorRegresar.innerHTML = "";
+
+            // Ocultar información del cliente
+            document.getElementById("infoCliente").style.display = "none";
+
+            // Actualizamos el título con el alias de la tabla
+            document.querySelector("h1").innerText = `${tablaNombre}`;
+
+            paginaActual = 1;
+            totalPaginasExistentes = json.total_paginas;
+            actualizarTextoPagina();
+            document.getElementById("paginacion").style.display = "none";
+
+            currentColumnOrder = json.column_order;
+
+            // Mostrar botón de búsqueda detallada
+            document.querySelector(".crear-btn").style.display = "block";
+          }
+        } catch (e) {
+          console.error("Error al cargar tabla:", e);
+        }
+      }
+
+      // -- 3. Funciones de los modales --
+      function abrirModalAvanzado() {
+        const tabla_actual = document.getElementById("selectorTabla").value;
+        if (tabla_actual === "inventario") {
+          document.getElementById("miModalAvanzado").style.display = "flex";
+        } else if (tabla_actual === "ztbsd_seg_ped") {
+          document.getElementById("miModalAvanzadoai_eop").style.display =
+            "flex";
+        }
+      }
+
+      // 4. Funciones de cierre y limpieza de modales
+      function cerrarModalAvanzado() {
+        document.getElementById("miModalAvanzado").style.display = "none";
+      }
+
+      function cerrarModalAvanzadoai_eop() {
+        document.getElementById("miModalAvanzadoai_eop").style.display = "none";
+      }
+
+      function limpiarBusquedaAvanzada() {
+        document.getElementById("formAvanzada").reset();
+      }
+
+      function limpiarModalai_eop() {
+        document.getElementById("formAvanzadaai_eop").reset();
+        // También limpiar el campo de orden externo
+        document.getElementById("aufnr").value = "";
+      }
+
+      function cerrarYLimpiarAvanzado() {
+        limpiarBusquedaAvanzada();
+        cerrarModalAvanzado();
+      }
+
+      function cerrarYLimpiarai_eop() {
+        limpiarModalai_eop();
+        cerrarModalAvanzadoai_eop();
+      }
+
+      // 5. Funciones de renderizado y ordenamiento de datos
+      function renderizarDatos(data) {
+        document.getElementById("tablaInventario").style.display = "table"; // Mostramos tabla
+        document.getElementById("mensajeBusqueda").style.display = "none"; // Ocultamos mensaje
+
+        const tabla = document.getElementById("tablaInventario");
+        const thead = tabla.querySelector("thead tr");
+        const tbody = tabla.querySelector("tbody");
+
+        const nombreTablaActual =
+          document.getElementById("selectorTabla").value;
+        tabla.classList.add("tabla-ancha");
+
+        // Agregar clase específica para tabla con muchas columnas (seguimiento de pedidos)
+        if (nombreTablaActual === "ztbsd_seg_ped") {
+          tabla.classList.add("tabla-muchas-columnas");
+        } else {
+          tabla.classList.remove("tabla-muchas-columnas");
+        }
+
+        // Mostrar nombre del cliente si hay resultados y es la tabla ztbsd_seg_ped
+        const infoCliente = document.getElementById("infoCliente");
+        const nombreCliente = document.getElementById("nombreCliente");
+
+        // Verificar si se buscó por cliente (revisar busquedaActual)
+        const textoBuscadoCliente =
+          busquedaActual && busquedaActual.name1
+            ? busquedaActual.name1.trim().toLowerCase()
+            : "";
+        // Esta bandera indicará si debemos mostrar el título grande de cliente
+        let mostrarClienteEnTitulo = false;
+
+        if (
+          nombreTablaActual === "ztbsd_seg_ped" &&
+          data.results &&
+          data.results.length > 0
+        ) {
+          // Buscar el nombre del cliente en los resultados (columna NAME1)
+          const primerResultado = data.results[0];
+          const nombreClienteValor =
+            primerResultado["NAME1"] || primerResultado["name1"] || "";
+          const nombreClienteNormalizado = (nombreClienteValor || "")
+            .trim()
+            .toLowerCase();
+
+          // Mostrar título SOLO si la búsqueda coincide exactamente con el nombre del cliente
+          if (
+            textoBuscadoCliente &&
+            nombreClienteNormalizado &&
+            textoBuscadoCliente === nombreClienteNormalizado
+          ) {
+            nombreCliente.textContent = nombreClienteValor;
+            infoCliente.style.display = "block";
+            mostrarClienteEnTitulo = true;
+            // Remover NAME1 de las columnas si está presente
+            if (data.column_order && data.column_order.includes("NAME1")) {
+              const index = data.column_order.indexOf("NAME1");
+              data.column_order.splice(index, 1);
+              if (data.nombres_columnas) {
+                data.nombres_columnas.splice(index, 1);
+              }
+            }
+          } else {
+            // Si NO se buscó por cliente, ocultar título
+            infoCliente.style.display = "none";
+          }
+        } else {
+          infoCliente.style.display = "none";
+        }
+
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        if (!data.column_order || data.column_order.length === 0) {
+          return;
+        }
+
+        if (!data.results || data.results.length === 0) {
+          if (data.initial) {
+            // Crear cabeceras sin datos
+            const numeric_cols =
+              nombreTablaActual === "inventario"
+                ? numeric_cols_inv
+                : numeric_cols_ped;
+            const date_cols =
+              nombreTablaActual === "inventario"
+                ? date_cols_inv
+                : date_cols_ped;
+
+            // Usar la misma lógica que para el título: solo ocultar NAME1 si hubo coincidencia exacta
+            const buscoPorClienteHeaders = mostrarClienteEnTitulo;
+
+            for (let i = 0; i < data.column_order.length; i++) {
+              const col = data.column_order[i];
+
+              // Si se buscó por cliente (coincidencia exacta), no mostrar la columna NAME1
+              if (buscoPorClienteHeaders && col === "NAME1") {
+                continue; // Saltar esta columna
+              }
+
+              const displayName = data.nombres_columnas
+                ? data.nombres_columnas[i]
+                : col;
+              const th = document.createElement("th");
+              const button = document.createElement("button");
+              button.style.display = "flex";
+              button.style.justifyContent = "space-between";
+              button.style.alignItems = "center";
+              button.style.width = "100%";
+              button.style.border = "none";
+              button.style.background = "none";
+              button.style.cursor = "pointer";
+              button.style.fontWeight = "bold";
+              button.style.padding = "5px";
+
+              button.textContent = displayName;
+
+              th.appendChild(button);
+              thead.appendChild(th);
+            }
+            tbody.innerHTML = "";
+          } else {
+            // Sin cabeceras, solo mensaje cuando es búsqueda sin resultados o no hay datos que coincidan en la tabla
+            tbody.innerHTML = `<tr><td style="padding:50px; text-align:center;">No se encontraron registros</td></tr>`;
+          }
+          return;
+        }
+
+        // Crear cabeceras y filas de datos si khay resultados similares en la tabla
+        const numeric_cols =
+          nombreTablaActual === "inventario"
+            ? numeric_cols_inv
+            : numeric_cols_ped;
+        const date_cols =
+          nombreTablaActual === "inventario" ? date_cols_inv : date_cols_ped;
+
+        // Usar la misma bandera de coincidencia exacta para decidir si ocultar NAME1
+
+        for (let i = 0; i < data.column_order.length; i++) {
+          const col = data.column_order[i];
+
+          // Si se buscó por cliente (coincidencia exacta), no mostrar la columna NAME1 en el encabezado
+          if (mostrarClienteEnTitulo && col === "NAME1") {
+            continue; // Saltar esta columna
+          }
+
+          const displayName = data.nombres_columnas
+            ? data.nombres_columnas[i]
+            : col;
+          const th = document.createElement("th");
+          const button = document.createElement("button");
+          button.style.display = "flex";
+          button.style.justifyContent = "space-between";
+          button.style.alignItems = "center";
+          button.style.width = "100%";
+          button.style.border = "none";
+          button.style.background = "none";
+          button.style.cursor = "pointer";
+          button.style.fontWeight = "bold";
+          button.style.padding = "5px";
+
+          button.textContent = displayName;
+
+          if (!data.initial) {
+            // Flecha solo si no es inicial
+            const arrow = document.createElement("span");
+            let dir = "asc";
+            if (numeric_cols.includes(col) || date_cols.includes(col))
+              dir = "desc";
+            let currentDir = dir;
+            if (orden_col === col) currentDir = orden_dir;
+            arrow.textContent = currentDir === "asc" ? " ↓" : " ↑";
+
+            button.appendChild(arrow);
+            button.onclick = () => ordenarPor(col, dir);
+          }
+
+          th.appendChild(button);
+          thead.appendChild(th);
+        }
+
+        data.results.forEach((fila) => {
+          const tr = document.createElement("tr");
+          tr.className = "filas";
+          data.column_order.forEach((col) => {
+            const td = document.createElement("td");
+            td.textContent = fila[col] || "";
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+
+        // Agregar botón Regresar si no es carga inicial (es decir, después de búsqueda)
+        const existingBtn = document.getElementById("btnRegresar");
+        if (existingBtn) existingBtn.remove();
+        if (!data.initial) {
+          const regresarBtn = document.createElement("button");
+          regresarBtn.id = "btnRegresar";
+          regresarBtn.textContent = "Regresar";
+          regresarBtn.className = "crear-btn boton-buscar";
+          regresarBtn.style.display = "block";
+          regresarBtn.style.margin = "0 auto";
+          regresarBtn.onclick = () => {
+            // Limpiar el campo de número de orden
+            document.getElementById("aufnr").value = "";
+            cargarTablaSeleccionada();
+          };
+          const contenedorRegresar = document.getElementById(
+            "contenedor-regresar",
+          );
+          contenedorRegresar.innerHTML = "";
+          contenedorRegresar.appendChild(regresarBtn);
+        }
+        setTimeout(sincronizarScrolls, 150);
+
+        sincronizarScrolls();
+      }
+
+      function ordenarPor(col, defaultDir) {
+        if (orden_col === col) {
+          orden_dir = orden_dir === "asc" ? "desc" : "asc";
+        } else {
+          orden_col = col;
+          orden_dir = defaultDir;
+        }
+
+        if (currentData) {
+          // Ordenar localmente los datos filtrados
+          const numeric_cols =
+            document.getElementById("selectorTabla").value === "inventario"
+              ? numeric_cols_inv
+              : numeric_cols_ped;
+          const date_cols =
+            document.getElementById("selectorTabla").value === "inventario"
+              ? date_cols_inv
+              : date_cols_ped;
+          currentData.sort((a, b) => {
+            let a_val = a[orden_col] || "";
+            let b_val = b[orden_col] || "";
+            if (date_cols.includes(orden_col)) {
+              return orden_dir === "asc"
+                ? a_val.localeCompare(b_val)
+                : b_val.localeCompare(a_val);
+            } else {
+              let a_num = parseFloat(a_val.replace(",", "."));
+              let b_num = parseFloat(b_val.replace(",", "."));
+              if (!isNaN(a_num) && !isNaN(b_num)) {
+                return orden_dir === "asc" ? a_num - b_num : b_num - a_num;
+              } else {
+                return orden_dir === "asc"
+                  ? a_val.localeCompare(b_val)
+                  : b_val.localeCompare(a_val);
+              }
+            }
+          });
+          renderizarDatos({
+            results: currentData,
+            column_order: currentColumnOrder,
+            nombres_columnas: currentNombresColumnas,
+            initial: false,
+          });
+        } else {
+          // Si no hay datos filtrados, cargar desde backend
+          const tabla = document.getElementById("selectorTabla").value;
+          paginaActual = 1;
+          fetch(
+            `/obtener_tabla/${tabla}?pagina=1&orden_col=${orden_col}&orden_dir=${orden_dir}`,
+          )
+            .then((resp) => resp.json())
+            .then((json) => {
+              totalPaginasExistentes = json.total_paginas;
+              renderizarDatos(json);
+              actualizarTextoPagina();
+              document.getElementById("paginacion").style.display = "none";
+              document.querySelector(".contenedor-tabla-scroll").scrollTop = 0;
+            })
+            .catch((e) => console.error(e));
+        }
+      }
+
+      // 6. paginacion de datos del backend
+      async function cambiarPagina(direccion) {
+        if (busquedaActual) {
+          // Paginación de búsqueda
+          await cambiarPaginaBusqueda(direccion);
+        } else {
+          // Paginación normal
+          await cambiarPaginaNormal(direccion);
+        }
+      }
+      // Funciones de paginación normales
+      async function cambiarPaginaNormal(direccion) {
+        const nuevaPagina = paginaActual + direccion;
+        if (nuevaPagina < 1) return;
+
+        esetearPosicionScroll();
+
+        const tabla = document.getElementById("selectorTabla").value;
+
+        let url = `/obtener_tabla/${tabla}?pagina=${nuevaPagina}`;
+        if (orden_col) url += `&orden_col=${orden_col}&orden_dir=${orden_dir}`;
+
+        resetearScrollX();
+
+        try {
+          const resp = await fetch(url);
+          const json = await resp.json();
+
+          if (json.results && json.results.length > 0) {
+            paginaActual = nuevaPagina;
+            totalPaginasExistentes =
+              json.total_paginas || totalPaginasExistentes;
+            renderizarDatos(json);
+            // Remover botón Regresar si existe
+            const contenedorRegresar = document.getElementById(
+              "contenedor-regresar",
+            );
+            contenedorRegresar.innerHTML = "";
+            actualizarTextoPagina();
+            document.getElementById("paginacion").style.display =
+              totalPaginasExistentes > 1 ? "block" : "none";
+            document.querySelector(".contenedor-tabla-scroll").scrollTop = 0;
+          } else {
+            alert("No hay más datos en esta tabla.");
+          }
+        } catch (e) {
+          console.error("Error paginando:", e);
+        }
+      }
+      // Funciones de paginación de búsqueda
+      async function cambiarPaginaBusqueda(direccion) {
+        const nuevaPagina = paginaBusquedaActual + direccion;
+        if (nuevaPagina < 1 || nuevaPagina > totalPaginasBusqueda) return;
+
+        resetearPosicionScroll();
+
+        // Actualizacion de página en datos de búsqueda actual
+        const dataBusqueda = { ...busquedaActual, pagina: nuevaPagina };
+
+        const tabla = document.getElementById("selectorTabla").value;
+        if (tabla === "inventario") {
+          await realizarBusquedaAvanzada(tabla, dataBusqueda);
+        } else {
+          await realizarBusquedaAvanzadaai_eop(dataBusqueda);
+        }
+
+        document.querySelector(".contenedor-tabla-scroll").scrollTop = 0;
+
+        resetearScrollX();
+      }
+
+      // 7. Funciones de eventos y utilidades
+      function actualizarTextoPagina() {
+        const span = document.getElementById("num-pagina");
+        if (span) {
+          if (busquedaActual) {
+            span.innerText = `${paginaBusquedaActual} de ${totalPaginasBusqueda}`;
+          } else {
+            span.innerText = `${paginaActual} de ${totalPaginasExistentes}`;
+          }
+        }
+      }
+
+      function actualizarTextoPaginaBusqueda() {
+        // Reutilizamos la función principal de actualización de texto de página
+        actualizarTextoPagina();
+      }
+
+      // 8. Funciones de búsqueda avanzada
+      async function buscarAvanzado(event) {
+        event.preventDefault();
+        const tabla = document.getElementById("selectorTabla").value;
+
+        // Detectar si estamos en móvil o desktop
+        const desktopSelector = document.querySelector(".desktop-selector");
+
+        const esDesktop =
+          desktopSelector &&
+          window.getComputedStyle(desktopSelector).display !== "none";
+
+        const descMaterialValue = esDesktop
+          ? document.getElementById("descripcionMaterial").value.trim()
+          : document.getElementById("descripcionMaterialMobile").value.trim();
+        const data = {
+          material: document.getElementById("advMaterial").value.trim(),
+          advDesMAterial: descMaterialValue,
+          pagina: 1, // Iniciar en página 1
+        };
+
+        await realizarBusquedaAvanzada(tabla, data);
+      }
+
+      async function realizarBusquedaAvanzada(tabla, data) {
+        const resp = await fetch(`/buscar_avanzado/${tabla}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        let json = await resp.json();
+
+        // Por esto (Búsqueda parcial):
+        if (data.material !== "") {
+          json.results = json.results.filter((item) => {
+            return (
+              String(item.Material || item.material).trim() ===
+              String(data.material).trim()
+            );
+          });
+
+          json.total_paginas = json.results.length > 0 ? 1 : 0;
+          totalPaginasBusqueda = json.total_paginas;
+        }
+
+        // Guardar estado de búsqueda
+        busquedaActual = data;
+        paginaBusquedaActual = json.pagina_actual || 1;
+        totalPaginasBusqueda = json.total_paginas || 1;
+
+        // Ordenar si hay orden
+        if (orden_col) {
+          const numeric_cols =
+            tabla === "inventario" ? numeric_cols_inv : numeric_cols_ped;
+          const date_cols =
+            tabla === "inventario" ? date_cols_inv : date_cols_ped;
+          json.results.sort((a, b) => {
+            let a_val = a[orden_col] || "";
+            let b_val = b[orden_col] || "";
+            if (date_cols.includes(orden_col)) {
+              return orden_dir === "asc"
+                ? a_val.localeCompare(b_val)
+                : b_val.localeCompare(a_val);
+            } else {
+              let a_num = parseFloat(a_val.replace(",", "."));
+              let b_num = parseFloat(b_val.replace(",", "."));
+              if (!isNaN(a_num) && !isNaN(b_num)) {
+                return orden_dir === "asc" ? a_num - b_num : b_num - a_num;
+              } else {
+                return orden_dir === "asc"
+                  ? a_val.localeCompare(b_val)
+                  : b_val.localeCompare(a_val);
+              }
+            }
+          });
+        }
+
+        currentData = json.results;
+        currentColumnOrder = json.column_order;
+        currentNombresColumnas = json.nombres_columnas;
+        renderizarDatos(json);
+
+        // Mostrar y ocultar paginación según resultados de búsqueda
+        document.getElementById("paginacion").style.display =
+          totalPaginasBusqueda > 1 ? "block" : "none";
+        actualizarTextoPaginaBusqueda();
+
+        cerrarModalAvanzado();
+        limpiarBusquedaAvanzada();
+      }
+      // Búsqueda avanzada para la tabla Pedidos de despacho (ztbsd_seg_ped) de la base de datos ai_eop
+      async function buscarAvanzadoai_eop(event) {
+        event.preventDefault();
+
+        // Detectar si estamos en móvil o desktop
+        const desktopSelector = document.querySelector(".desktop-selector");
+        const name1Value =
+          desktopSelector && desktopSelector.style.display !== "none"
+            ? document.getElementById("name1").value.trim()
+            : document.getElementById("name1Mobile").value.trim();
+
+        const data = {
+          name1: name1Value,
+          fecha_inicio: document.getElementById("fecha_inicio").value.trim(),
+          fecha_fin: document.getElementById("fecha_fin").value.trim(),
+          // NO incluir aufnr aquí para que sea independiente del campo de orden
+          // Iniciar en página 1
+          pagina: 1,
+        };
+
+        await realizarBusquedaAvanzadaai_eop(data);
+      }
+
+      async function realizarBusquedaAvanzadaai_eop(data) {
+        const resp = await fetch("/buscar_avanzado/ztbsd_seg_ped", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        let json = await resp.json();
+
+        // Si no hay resultados, asegurarse de mostrar el mensaje
+        if (!json.results || json.results.length === 0) {
+          json.results = [];
+          json.initial = false;
+        }
+
+        // --- NUEVA LÓGICA DE FILTRADO ---
+        /*
+            if (data.Descripcion_material !== "") {
+                json.results = json.results.filter(item => {
+                        return String(item.Descripcion_material || item.Descripcion_material).trim() === String(data.Descripcion_material).trim();
+                    });
+
+                    json.total_paginas = json.results.length > 0 ? 1 : 0;
+                    totalPaginasBusqueda = json.total_paginas;
+            }
+            */
+
+        // Guardar busqueda actual y paginación para visualización
+        busquedaActual = data;
+        paginaBusquedaActual = json.pagina_actual || 1;
+        totalPaginasBusqueda = json.total_paginas || 1;
+
+        // Ordenar si hay orden
+        if (orden_col) {
+          const numeric_cols = numeric_cols_ped;
+          const date_cols = date_cols_ped;
+          json.results.sort((a, b) => {
+            let a_val = a[orden_col] || "";
+            let b_val = b[orden_col] || "";
+            if (date_cols.includes(orden_col)) {
+              return orden_dir === "asc"
+                ? a_val.localeCompare(b_val)
+                : b_val.localeCompare(a_val);
+            } else {
+              let a_num = parseFloat(a_val.replace(",", "."));
+              let b_num = parseFloat(b_val.replace(",", "."));
+              if (!isNaN(a_num) && !isNaN(b_num)) {
+                return orden_dir === "asc" ? a_num - b_num : b_num - a_num;
+              } else {
+                return orden_dir === "asc"
+                  ? a_val.localeCompare(b_val)
+                  : b_val.localeCompare(a_val);
+              }
+            }
+          });
+        }
+
+        currentData = json.results;
+        currentColumnOrder = json.column_order;
+        currentNombresColumnas = json.nombres_columnas;
+        renderizarDatos(json);
+
+        // Mostrar/ocultar paginación según resultados de búsqueda
+        document.getElementById("paginacion").style.display =
+          totalPaginasBusqueda > 1 ? "block" : "none";
+        actualizarTextoPaginaBusqueda();
+
+        // Solo cerrar modal si viene de una búsqueda desde el modal (no de búsqueda automática)
+        if (data.name1 || data.fecha_inicio || data.fecha_fin) {
+          cerrarModalAvanzadoai_eop();
+          limpiarModalai_eop();
+        }
+      }
+
+      // Evento para cerrar modal al hacer clic fuera
+      window.onclick = function (event) {
+        if (event.target.className === "modal-avanzado") {
+          event.target.style.display = "none";
+        }
+      };
+
+      // Función para ir a la primera página
+      async function irAPrimeraPagina() {
+        if (busquedaActual) {
+          if (paginaBusquedaActual === 1) return; // Ya estamos en el inicio
+          const dataBusqueda = { ...busquedaActual, pagina: 1 };
+          const tabla = document.getElementById("selectorTabla").value;
+          if (tabla === "inventario") {
+            await realizarBusquedaAvanzada(tabla, dataBusqueda);
+          } else {
+            await realizarBusquedaAvanzadaai_eop(dataBusqueda);
+          }
+        } else {
+          if (paginaActual === 1) return; // Ya estamos en el inicio
+          // Calculamos cuánto debemos restar para llegar a 1
+          const diferencia = 1 - paginaActual;
+          await cambiarPaginaNormal(diferencia);
+        }
+
+        resetearScrollX();
+      }
+
+      // Función para ir a la última página
+      async function irAUltimaPagina() {
+        if (busquedaActual) {
+          if (paginaBusquedaActual === totalPaginasBusqueda) return; // Ya estamos al final
+          const dataBusqueda = {
+            ...busquedaActual,
+            pagina: totalPaginasBusqueda,
+          };
+          const tabla = document.getElementById("selectorTabla").value;
+          if (tabla === "inventario") {
+            await realizarBusquedaAvanzada(tabla, dataBusqueda);
+          } else {
+            await realizarBusquedaAvanzadaai_eop(dataBusqueda);
+          }
+        } else {
+          if (paginaActual === totalPaginasExistentes) return; // Ya estamos al final
+          // Calculamos cuánto debemos sumar para llegar al total
+          const diferencia = totalPaginasExistentes - paginaActual;
+          await cambiarPaginaNormal(diferencia);
+        }
+
+        resetearScrollX();
+      }
+
+      function sincronizarScrolls() {
+        const superior = document.getElementById("scroll-superior-container");
+        const contenidoSuperior = document.getElementById(
+          "scroll-superior-contenido",
+        );
+        const inferior = document.querySelector(".contenedor-tabla-scroll"); // Tu div de la tabla
+        const tabla = document.getElementById("tablaInventario");
+
+        if (!superior || !inferior || !tabla) return;
+
+        // El contenedor mide lo que mide la pantalla (fija las flechas)
+        superior.style.width = inferior.offsetWidth + "px";
+
+        // El contenido interno mide lo que mide la tabla (largo total)
+        const anchoRealTabla = tabla.scrollWidth;
+        contenidoSuperior.style.width = anchoRealTabla + "px";
+
+        // Mostrar u ocultar
+        superior.style.display =
+          anchoRealTabla > inferior.offsetWidth ? "block" : "none";
+
+        // Sincronización
+        superior.onscroll = function () {
+          inferior.scrollLeft = superior.scrollLeft;
+        };
+        inferior.onscroll = function () {
+          superior.scrollLeft = inferior.scrollLeft;
+        };
+      }
+      // Ejecutar al cargar y al redimensionar
+      window.addEventListener("load", sincronizarScrolls);
+      window.addEventListener("resize", sincronizarScrolls);
+
+      // Función para volver al inicio (X=0) al cambiar de página
+      function resetearScrollX() {
+        const superior = document.getElementById("scroll-superior-container");
+        const inferior = document.querySelector(".contenedor-tabla-scroll");
+        if (superior) superior.scrollLeft = 0;
+        if (inferior) inferior.scrollLeft = 0;
+      }
+      function resetearPosicionScroll() {
+        const scrollSupContainer = document.getElementById(
+          "scroll-superior-container",
+        );
+        const containerTabla = document.querySelector(".table-wrapper"); // O el div que tenga tu scroll inferior
+
+        if (scrollSupContainer) {
+          scrollSupContainer.scrollLeft = 0;
+        }
+        if (containerTabla) {
+          containerTabla.scrollLeft = 0;
+        }
+      }
+
+      // Función para cargar los clientes desde la base de datos
+      function cargarListaClientes() {
+        const selectorClientes = document.getElementById("selectorClientes");
+        const datalistClientes = document.getElementById("clientesList");
+
+        // Evitamos cargar los datos si ya están ahí
+        if (selectorClientes && selectorClientes.children.length > 1) return;
+        if (datalistClientes && datalistClientes.children.length > 0) return;
+
+        fetch("/obtener_clientes")
+          .then((response) => response.json())
+          .then((data) => {
+            // Cargar en selector móvil
+            if (selectorClientes) {
+              data.forEach((cliente) => {
+                const option = document.createElement("option");
+                option.value = cliente;
+                option.textContent = cliente;
+                selectorClientes.appendChild(option);
+              });
+            }
+
+            // Cargar en datalist desktop
+            if (datalistClientes) {
+              data.forEach((cliente) => {
+                const option = document.createElement("option");
+                option.value = cliente;
+                datalistClientes.appendChild(option);
+              });
+            }
+          })
+          .catch((error) => console.error("Error cargando clientes:", error));
+      }
+
+      // Función para cargar los materiales desde la base de datos
+      function cargarListaMateriales() {
+        const selectorMateriales =
+          document.getElementById("selectorMateriales");
+        const datalistMateriales = document.getElementById("materialesList");
+
+        // Evitamos cargar los datos si ya están ahí
+        if (selectorMateriales && selectorMateriales.children.length > 1)
+          return;
+        if (datalistMateriales && datalistMateriales.children.length > 0)
+          return;
+
+        fetch("/obtener_materiales")
+          .then((response) => response.json())
+          .then((data) => {
+            // Cargar en selector móvil
+            if (selectorMateriales) {
+              data.forEach((material) => {
+                const option = document.createElement("option");
+                option.value = material;
+                option.textContent = material;
+                selectorMateriales.appendChild(option);
+              });
+            }
+
+            // Cargar en datalist desktop
+            if (datalistMateriales) {
+              data.forEach((material) => {
+                const option = document.createElement("option");
+                option.value = material;
+                datalistMateriales.appendChild(option);
+              });
+            }
+          })
+          .catch((error) => console.error("Error cargando materiales:", error));
+      }
+
+      // Función para configurar búsqueda automática por número de orden
+      let timeoutBusquedaOrden = null;
+      function configurarBusquedaAutomaticaOrden() {
+        const campoOrden = document.getElementById("aufnr");
+        if (!campoOrden) return;
+
+        // Remover listeners anteriores si existen
+        campoOrden.removeEventListener("input", buscarPorOrden);
+
+        // Agregar listener para búsqueda automática con debounce
+        campoOrden.addEventListener("input", function () {
+          // Limpiar timeout anterior
+          if (timeoutBusquedaOrden) {
+            clearTimeout(timeoutBusquedaOrden);
+          }
+
+          // Esperar 500ms después de que el usuario deje de escribir
+          timeoutBusquedaOrden = setTimeout(() => {
+            buscarPorOrden();
+          }, 500);
+        });
+      }
+
+      // Función para buscar solo por número de pedido
+      async function buscarPorOrden() {
+        const vbeln = document.getElementById("aufnr").value.trim();
+
+        // Si el campo está vacío, no hacer búsqueda
+        if (!vbeln) {
+          // Ocultar tabla y mostrar mensaje
+          document.getElementById("tablaInventario").style.display = "none";
+          document.getElementById("mensajeBusqueda").style.display = "block";
+          return;
+        }
+
+        const data = {
+          vbeln: vbeln,
+          pagina: 1,
+        };
+
+        await realizarBusquedaAvanzadaai_eop(data);
+      }
+
+      // Funcionalidad para selectores personalizados móviles
+      document.addEventListener("DOMContentLoaded", function () {
+        // Selector de materiales
+        const selectorMateriales =
+          document.getElementById("selectorMateriales");
+        const inputMaterial = document.getElementById(
+          "descripcionMaterialMobile",
+        );
+
+        if (selectorMateriales && inputMaterial) {
+          selectorMateriales.addEventListener("change", function () {
+            if (this.value) {
+              inputMaterial.value = this.value;
+            }
+          });
+        }
+
+        // Selector de clientes
+        const selectorClientes = document.getElementById("selectorClientes");
+        const inputCliente = document.getElementById("name1Mobile");
+
+        if (selectorClientes && inputCliente) {
+          selectorClientes.addEventListener("change", function () {
+            if (this.value) {
+              inputCliente.value = this.value;
+            }
+          });
+        }
+      });
+    </script>
+
+    <!-- Service Worker para PWA -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register('{{ url_for("static", filename="sw.js") }}')
+            .then((registration) => {
+              console.log(
+                "Service Worker registrado exitosamente:",
+                registration.scope,
+              );
+            })
+            .catch((error) => {
+              console.log("Error al registrar Service Worker:", error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

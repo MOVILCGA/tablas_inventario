@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#0d2a7a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Inicio Sesión CGA">
+  <title>Inicio de sesión - CGA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='CSS/Estilos_login.css') }}">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imagen_31-remove_fondo.ico') }}">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='image/imagen_31-remove_fondo.png') }}">
+</head>
+<body>
+    <main class="login-container">
+        <div class="login-content">
+            <img src="{{ url_for('static', filename='/image/logo_CGA_original.png') }}" alt="Logo CGA" class="logo">
+            
+            <h1 class="login-title">Inicio de sesión</h1>
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="flash-messages" role="alert">
+                  {% for message in messages %}
+                    <p>{{ message }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form action="/login/" method="POST" autocomplete="off" aria-label="Formulario de inicio de sesión">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Ingrese su usuario" 
+                        required 
+                        autofocus 
+                        autocomplete="off"
+                        aria-label="Nombre de usuario"
+                        aria-required="true"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Ingrese su contraseña" 
+                        required 
+                        autocomplete="off"
+                        aria-label="Contraseña"
+                        aria-required="true"
+                    >
+                </div>
+                <button type="submit" class="btn-login" aria-label="Iniciar sesión">Ingresar</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+Librerias a implementar
+
+- pip install flask
+- pip install Flask-MySQLdb
+- pip install python-dotenv
+- pip install Flask-Login
+- pip install waitress  (Servidor WSGI permite ejecutar sin VS Code)
+
+
+
+aitv -  Inventario
+ai_eop - ztbsd_seg_ped (Pedidos)
