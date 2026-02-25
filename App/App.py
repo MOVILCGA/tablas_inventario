@@ -224,6 +224,30 @@ ALIAS_aitv = {
     'Centro': 'Centro','Material': '# material', 'Descripcion_material': 'Material', 'stock': 'Cantidad (Un)'
 }
 
+COLUMNAS_v_inventario_t = [
+    "CENTRO",
+    "NOMBRE_CENTRO",
+    "ALMACEN",
+    "NOMBRE_ALMACEN",
+    "CODIGO_MATERIAL",
+    "DESCRIPCION_MATERIAL",
+    "LOTE",
+    "STOCK",
+    "UNIDAD_MEDIDA",
+]
+
+ALIAS_v_inventario_t = {
+    "CENTRO": "Centro",
+    "NOMBRE_CENTRO": "Nombre centro",
+    "ALMACEN": "Almacén",
+    "NOMBRE_ALMACEN": "Nombre almacén",
+    "CODIGO_MATERIAL": "Código material",
+    "DESCRIPCION_MATERIAL": "Descripción material",
+    "LOTE": "Lote",
+    "STOCK": "Stock",
+    "UNIDAD_MEDIDA": "Unidad",
+}
+
 
 COLUMNAS_ai_eop = [
     "VBELN", "ERDAT", "POSNR_CT", "POSNR", "AUFNR", "ARKTX", "KUNNR",
@@ -238,8 +262,16 @@ ALIAS_ai_eop = {
     "VDATU1": "Pref. Entrega inicial","FH_CR_TRAS": "Inicio transp.", "FH_FIN_TRAS": "Fin trasnp."
 }
 # definición de columnas numéricas y de fecha para cada tabla
-numeric_cols_aitv = ['Centro', 'Almacen', 'Material', 'stock', 'VALOR_UNITARIO']
+numeric_cols_aitv = ['Centro', 'Material', 'stock']
 date_cols_aitv = []
+numeric_cols_v_inventario_t = [
+    "CENTRO",
+    "ALMACEN",
+    "STOCK",
+    "COSTO"
+]
+
+date_cols_v_inventario_t = []
 # numeric_cols_ai_eop = ['MANDT', 'ID', 'VBELN', 'KUNNR', 'POSNR', 'MATNR', 'WERKS', 'NETWR', 'KZWI1', 'KZWI2', 'BRGEW', 'NETPR', 'WAVWR', 'KZWI3', 'KWMENG', 'NTGEW', 'POSNR_OF', 'PERNR_E', 'PEDIDO', 'KURSK', 'PERNR_E2', 'DIA', 'REN', 'UTILIDAD', 'POSNR_ENT', 'NTGEW_ENT', 'LFIMG_ENT', 'PESO_CONT', 'PESO_NO_CONT', 'CANT_ENT', 'PEND_ENT', 'CANT_FAC', 'PEND_FAC', 'PEND_ENT_FAC', 'DIF_FAC', 'DIF_FAC_CTD', 'DIF_ENT_CTD', 'DIF_ENT', 'DIF_ENT_FAC', 'VL_PEND_FAC', 'VL_PEND_ENT', 'VL_PEN_TOT', 'VL_FACT', 'VALOR_UN_PED', 'RFMNG', 'PESO_FACT', 'RFWRT', 'MJAHR', 'CANT_TRAS', 'PESO_TRAS', 'POSNR_CT', 'ORDENES', 'GJAHR', 'MES', 'CANTIDAD_ENTREGADA', 'DIFERENCIA_ENTREGA']
 numeric_cols_ai_eop = [
     "VBELN", "POSNR_CT", "POSNR", "AUART", "SPSTG", "ERDAT", "AUFNR", "MATNR", "ARKTX", "KUNNR",
@@ -259,12 +291,15 @@ def seleccion_db():
     # Configuración de las bases de datos disponibles y sus 
     config_db = {
         'inventario': 'aitv',
-        'ztbsd_seg_ped': 'ai_eop'
+        'ztbsd_seg_ped': 'ai_eop',
+        'inventario_t': 'aitv',
+        
     }
     # listas de tablas disponibles y sus alias para mostrar
     tablas_disponibles = [
         {'clave': 'inventario', 'nombre': 'Inventario'},
-        {'clave': 'ztbsd_seg_ped', 'nombre': 'Seguimiento de pedidos'}
+        {'clave': 'ztbsd_seg_ped', 'nombre': 'Seguimiento de pedidos'},
+        {'clave': 'inventario_t', 'nombre': 'Inventario detallado'}
     ]
     # El valor por defecto de cada vez que se carga la pagina es (-- Seleccione una tabla --)
     tabla_seleccionada = request.args.get('tabla')
@@ -288,6 +323,10 @@ def seleccion_db():
     if tabla_seleccionada == 'inventario':
         sql = f"select {', '.join(COLUMNAS_aitv)} from inventario limit 100"
         nombres_columnas = [ALIAS_aitv.get(col, col) for col in COLUMNAS_aitv]
+    elif tabla_seleccionada == 'inventario_t':
+            sql = f"select {', '.join(COLUMNAS_v_inventario_t)} from v_inventario_t limit 100"
+            nombres_columnas = [ALIAS_v_inventario_t.get(col, col) for col in COLUMNAS_v_inventario_t]
+            
     elif tabla_seleccionada == 'ztbsd_seg_ped':
         sql = f"select {', '.join(COLUMNAS_ai_eop)} from ztbsd_seg_ped limit 100"
         nombres_columnas = [ALIAS_ai_eop.get(col, col) for col in COLUMNAS_ai_eop]
@@ -295,6 +334,7 @@ def seleccion_db():
     # Conexion a la base de datos y calculo de total de paginas si superan 100 filas
     datos = []
     total_paginas = 1
+    
     try:
         conn = MySQLdb.connect(**config)
         cursor = conn.cursor()
@@ -302,8 +342,14 @@ def seleccion_db():
         print(sql)
         datos = cursor.fetchall()
         
+        
         # Calcular total de filas para paginación
-        table = "inventario" if tabla_seleccionada == 'inventario' else "ztbsd_seg_ped"
+        if tabla_seleccionada == 'inventario':
+            table = "inventario"
+        elif tabla_seleccionada == 'inventario_t':
+            table = "v_inventario_t"
+        else:
+            table = "ztbsd_seg_ped"
         cursor.execute(f"SELECT COUNT(*) FROM {table}")
         total_filas = cursor.fetchone()[0]
         total_paginas = math.ceil(total_filas / 100)
@@ -332,7 +378,7 @@ def obtener_tabla(tabla_id):
     limit = 100
     offset = (pagina - 1) * limit
     
-    mapa_tablas = {'inventario': 'aitv', 'ztbsd_seg_ped': 'ai_eop'}
+    mapa_tablas = {'inventario': 'aitv','inventario_t': 'aitv', 'ztbsd_seg_ped': 'ai_eop'}
     db_actual = mapa_tablas.get(tabla_id, 'aitv')
     config = get_db_config(db_actual)
     
@@ -342,6 +388,12 @@ def obtener_tabla(tabla_id):
         numeric_cols = numeric_cols_aitv
         date_cols = date_cols_aitv
         nombres_columnas = [ALIAS_aitv.get(col, col) for col in cols]
+    elif tabla_id == 'inventario_t':
+        cols = COLUMNAS_v_inventario_t
+        table = "v_inventario_t"
+        numeric_cols = numeric_cols_v_inventario_t
+        date_cols = date_cols_v_inventario_t
+        nombres_columnas = [ALIAS_v_inventario_t.get(col, col) for col in cols]
     elif tabla_id == 'ztbsd_seg_ped':
         cols = COLUMNAS_ai_eop
         table = "ztbsd_seg_ped"
@@ -352,7 +404,9 @@ def obtener_tabla(tabla_id):
         return jsonify({'error': 'Tabla no válida'}), 400
     
     orden_col = request.args.get('orden_col')
-    orden_dir = request.args.get('orden_dir')
+    orden_dir = request.args.get('orden_dir', 'ASC').upper()
+    if orden_dir not in ['ASC', 'DESC']:
+        orden_dir = 'ASC'
     
     # Contar total de filas
     count_sql = f"SELECT COUNT(*) FROM {table}"
@@ -389,7 +443,7 @@ def obtener_tabla(tabla_id):
         
         cursor.close()
         conn.close()
-        return jsonify({'results': results, 'column_order': cols, 'nombres_columnas': nombres_columnas, 'total_paginas': 1, 'initial': len(results) == 0})
+        return jsonify({'results': results, 'column_order': cols, 'nombres_columnas': nombres_columnas, 'total_paginas': total_paginas, 'pagina_actual': pagina})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -397,8 +451,9 @@ def obtener_tabla(tabla_id):
 # 5.3 Ruta para búsqueda avanzada
 @app.route('/buscar_avanzado/<string:tabla_nombre>', methods=['POST'])
 def buscar_avanzado(tabla_nombre):
+    print("TABLA RECIBIDA >>>", tabla_nombre)
     # Realiza busqueda para saber a qué base de datos conectar
-    mapa_tablas = {'inventario': 'aitv', 'ztbsd_seg_ped': 'ai_eop'}
+    mapa_tablas = {'inventario': 'aitv','inventario_t': 'aitv','ztbsd_seg_ped': 'ai_eop'}
     db_actual = mapa_tablas.get(tabla_nombre, 'aitv')
     
     config = get_db_config(db_actual)
@@ -424,6 +479,19 @@ def buscar_avanzado(tabla_nombre):
         if data.get('material'):
             clauses.append("UPPER(Material) LIKE UPPER(%s)")
             params.append(f"%{data['material'].strip()}%")
+    elif tabla_nombre == 'inventario_t':
+        cols = COLUMNAS_v_inventario_t
+        table = "v_inventario_t"
+        nombres_columnas = [ALIAS_v_inventario_t.get(col, col) for col in cols]
+        # Filtro por descripción de material (Descripcion_material)
+        if data.get('advDesMAterial'):
+            clauses.append("UPPER(Descripcion_material) LIKE UPPER(%s)")
+            params.append(f"%{data['advDesMAterial'].strip()}%")
+        # Filtro por código de material (Material)
+        if data.get('material'):
+            clauses.append("UPPER(Material) LIKE UPPER(%s)")
+            params.append(f"%{data['material'].strip()}%")
+        
     else: 
         # Determinar si se busca por cliente
         busca_por_cliente = bool(data.get('name1'))
@@ -461,14 +529,11 @@ def buscar_avanzado(tabla_nombre):
             params.append(data['vbeln'].strip())
 
     if not clauses:
-        return jsonify({'results': [], 'column_order': cols, 'nombres_columnas': nombres_columnas, 'total_paginas': 1, 'pagina_actual': pagina})
-
-    # Consulta para contar total de resultados
-    count_sql = f"SELECT COUNT(*) FROM {table} WHERE " + " AND ".join(clauses)
-
-    # Consulta para obtener resultados paginados
-    sql = f"SELECT {', '.join(cols)} FROM {table} WHERE " + " AND ".join(clauses) + f" LIMIT {limit} OFFSET {offset}"
-
+        count_sql = f"SELECT COUNT(*) FROM {table}"
+        sql = f"SELECT {', '.join(cols)} FROM {table} LIMIT {limit} OFFSET {offset}"
+    else:
+        count_sql = f"SELECT COUNT(*) FROM {table} WHERE " + " AND ".join(clauses)
+        sql = f"SELECT {', '.join(cols)} FROM {table} WHERE " + " AND ".join(clauses) + f" LIMIT {limit} OFFSET {offset}"
     try:
         conn = MySQLdb.connect(**config)
         cursor = conn.cursor()
@@ -498,7 +563,7 @@ def buscar_avanzado(tabla_nombre):
             'initial': False
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500 # <-- Agregado el 500
+        raise e
  
  
 # Conexion establecida entre los nombres de los clientes de ai_eop
@@ -552,20 +617,6 @@ def obtener_materiales():
         print(f"Error al obtener materiales: {e}")
         return jsonify([]), 500
  
- 
-
-def es_admin_gestion():
-    """Verifica si el usuario actual es AdmCGA o tiene permisos de gestión"""
-    if not current_user.is_authenticated:
-        return False
-    
-    # AdmCGA tiene todos los permisos
-    if current_user.id == 'AdmCGA':
-        return True
-    
-    # Verificar si es administrador con permisos de gestión
-    usuario = USUARIOS.get(current_user.id, {})
-    return usuario.get('es_admin', False) and usuario.get('puede_gestionar', False)
  
 @app.route('/gestion_usuarios')
 @login_required

@@ -58,7 +58,9 @@
         onchange="cargarTablaSeleccionada()"
         aria-label="Seleccione lo que desea ver"
       >
-        <option value="" disabled selected>-- Seleccione lo que desea ver --</option>
+        <option value="" disabled selected>
+          -- Seleccione lo que desea ver --
+        </option>
         {% for tabla in tablas_disponibles %}
         <option value="{{ tabla.clave }}">{{ tabla.nombre }}</option>
         {% endfor %}
@@ -424,11 +426,10 @@
       // Mostrar/ocultar paginación según total de páginas
       document.getElementById("paginacion").style.display =
         totalPaginasExistentes > 1 ? "block" : "none";
-// -- 2. Función para cargar tabla seleccionada --
+      // -- 2. Función para cargar tabla seleccionada --
       async function cargarTablaSeleccionada() {
-        
         const selector = document.getElementById("selectorTabla"); // ✅ FALTABA
-        const tabla = selector.value; 
+        const tabla = selector.value;
 
         const botonBusqueda = document.querySelector(".boton-buscar");
 
@@ -448,21 +449,29 @@
             'Para visualizar los datos del cliente ingresa a <b>"Cliente"</b><br>Si quieres una busqueda mas precisa ingresa el número de orden.';
           cargarListaClientes(); // Cargar lista de clientes en el select
           // Configurar búsqueda automática en el campo de orden
+          // ... código anterior ...
           configurarBusquedaAutomaticaOrden();
-        } else if (tabla === "inventario") {
-          document.getElementById("contenedorBusqueda").style.display = "flex"; // Mostrar contenedor con botón
-          // Ocultar campo de orden para inventario
+        } else if (tabla === "inventario" || tabla === "inventario_t") {
+          // 1. Mostramos el contenedor donde está el botón azul
+          document.getElementById("contenedorBusqueda").style.display = "flex";
+
+          // 2. Ocultamos el campo de pedido (porque esto es inventario)
           document.getElementById("campoOrdenExterno").style.display = "none";
-          // Cambiar texto del botón a "Material"
+
+          // 3. Cambiamos el texto del botón azul a "Material"
           const botonCliente = document.querySelector(".boton-cliente");
           if (botonCliente) {
             botonCliente.textContent = "Material";
           }
-          // Actualizar mensaje para inventario
+
+          // 4. Ponemos el mensaje de instrucción en el cuadro blanco
           document.getElementById("textoMensajeBusqueda").innerHTML =
             'Para visualizar los datos del inventario ingresa a <b>"Material"</b>';
-          cargarListaMateriales(); // Cargar lista de materiales
+
+          // 5. Activamos la lista de materiales
+          cargarListaMateriales();
         } else {
+          // ... el resto sigue igual ...
           botonBusqueda.style.display = "none";
           document.getElementById("contenedorBusqueda").style.display = "none";
         }
@@ -530,10 +539,13 @@
 
       // -- 3. Funciones de los modales --
       function abrirModalAvanzado() {
-        const tabla_actual = document.getElementById("selectorTabla").value;
-        if (tabla_actual === "inventario") {
+        const selector = document.getElementById("selectorTabla");
+        const tabla = selector.value;
+
+        // Aquí también agregamos la nueva tabla para que abra el cuadro de búsqueda
+        if (tabla === "inventario" || tabla === "inventario_t") {
           document.getElementById("miModalAvanzado").style.display = "flex";
-        } else if (tabla_actual === "ztbsd_seg_ped") {
+        } else if (tabla === "ztbsd_seg_ped") {
           document.getElementById("miModalAvanzadoai_eop").style.display =
             "flex";
         }
@@ -648,12 +660,15 @@
         if (!data.results || data.results.length === 0) {
           if (data.initial) {
             // Crear cabeceras sin datos
+            const tablaActual = document.getElementById("selectorTabla").value;
+
             const numeric_cols =
-              nombreTablaActual === "inventario"
+              tablaActual === "inventario" || tablaActual === "inventario_t"
                 ? numeric_cols_inv
                 : numeric_cols_ped;
+
             const date_cols =
-              nombreTablaActual === "inventario"
+              tablaActual === "inventario" || tablaActual === "inventario_t"
                 ? date_cols_inv
                 : date_cols_ped;
 
@@ -698,11 +713,15 @@
 
         // Crear cabeceras y filas de datos si khay resultados similares en la tabla
         const numeric_cols =
-          nombreTablaActual === "inventario"
+          nombreTablaActual === "inventario" ||
+          nombreTablaActual === "inventario_t"
             ? numeric_cols_inv
             : numeric_cols_ped;
         const date_cols =
-          nombreTablaActual === "inventario" ? date_cols_inv : date_cols_ped;
+          nombreTablaActual === "inventario" ||
+          nombreTablaActual === "inventario_t"
+            ? date_cols_inv
+            : date_cols_ped;
 
         // Usar la misma bandera de coincidencia exacta para decidir si ocultar NAME1
 
@@ -796,12 +815,15 @@
 
         if (currentData) {
           // Ordenar localmente los datos filtrados
+          const tablaActual = document.getElementById("selectorTabla").value;
+
           const numeric_cols =
-            document.getElementById("selectorTabla").value === "inventario"
+            tablaActual === "inventario" || tablaActual === "inventario_t"
               ? numeric_cols_inv
               : numeric_cols_ped;
+
           const date_cols =
-            document.getElementById("selectorTabla").value === "inventario"
+            tablaActual === "inventario" || tablaActual === "inventario_t"
               ? date_cols_inv
               : date_cols_ped;
           currentData.sort((a, b) => {
@@ -908,7 +930,7 @@
         const dataBusqueda = { ...busquedaActual, pagina: nuevaPagina };
 
         const tabla = document.getElementById("selectorTabla").value;
-        if (tabla === "inventario") {
+        if (tabla === "inventario" || tabla === "inventario_t") {
           await realizarBusquedaAvanzada(tabla, dataBusqueda);
         } else {
           await realizarBusquedaAvanzadaai_eop(dataBusqueda);
@@ -989,9 +1011,14 @@
         // Ordenar si hay orden
         if (orden_col) {
           const numeric_cols =
-            tabla === "inventario" ? numeric_cols_inv : numeric_cols_ped;
+            tabla === "inventario" || tabla === "inventario_t"
+              ? numeric_cols_inv
+              : numeric_cols_ped;
+
           const date_cols =
-            tabla === "inventario" ? date_cols_inv : date_cols_ped;
+            tabla === "inventario" || tabla === "inventario_t"
+              ? date_cols_inv
+              : date_cols_ped;
           json.results.sort((a, b) => {
             let a_val = a[orden_col] || "";
             let b_val = b[orden_col] || "";
@@ -1135,7 +1162,7 @@
           if (paginaBusquedaActual === 1) return; // Ya estamos en el inicio
           const dataBusqueda = { ...busquedaActual, pagina: 1 };
           const tabla = document.getElementById("selectorTabla").value;
-          if (tabla === "inventario") {
+          if (tabla === "inventario" || tabla === "inventario_t") {
             await realizarBusquedaAvanzada(tabla, dataBusqueda);
           } else {
             await realizarBusquedaAvanzadaai_eop(dataBusqueda);
@@ -1159,7 +1186,7 @@
             pagina: totalPaginasBusqueda,
           };
           const tabla = document.getElementById("selectorTabla").value;
-          if (tabla === "inventario") {
+          if (tabla === "inventario" || tabla === "inventario_t") {
             await realizarBusquedaAvanzada(tabla, dataBusqueda);
           } else {
             await realizarBusquedaAvanzadaai_eop(dataBusqueda);
