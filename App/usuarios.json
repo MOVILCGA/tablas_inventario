@@ -203,5 +203,18 @@
         "nombre": "FabioRodriguez",
         "es_admin": true,
         "puede_gestionar": true
+    },
+    "IvanPatinioP": {
+        "password": "Aceros123*",
+        "nombre": "Usuario 1"
+    },
+    "FabioRodriguez": {
+        "password": "CGA_Aceros123*",
+        "nombre": "Usuario 2"
+    },
+    "montejorodriguez": {
+        "password": "123456",
+        "nombre": "Alison Brillyt Montejo Rodriguez",
+        "es_admin": false
     }
 }
