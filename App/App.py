@@ -297,9 +297,9 @@ def seleccion_db():
     }
     # listas de tablas disponibles y sus alias para mostrar
     tablas_disponibles = [
-        {'clave': 'inventario', 'nombre': 'Inventario'},
+        {'clave': 'inventario', 'nombre': 'Inventario PT y mercaderia'},
         {'clave': 'ztbsd_seg_ped', 'nombre': 'Seguimiento de pedidos'},
-        {'clave': 'inventario_t', 'nombre': 'Inventario detallado'}
+        {'clave': 'inventario_t', 'nombre': 'Inventario General '},
     ]
     # El valor por defecto de cada vez que se carga la pagina es (-- Seleccione una tabla --)
     tabla_seleccionada = request.args.get('tabla')
