@@ -217,11 +217,11 @@ def get_db_config(db_name):
 
 # --- 4. Definicion de las columnas de cada tabla ---
 COLUMNAS_aitv = [
-    'Centro','Material','Descripcion_material','stock'
+    'Centro','Material','Descripcion_material','stock','valor_lista'
 ]
 
 ALIAS_aitv = {
-    'Centro': 'Centro','Material': '# material', 'Descripcion_material': 'Material', 'stock': 'Cantidad (Un)'
+    'Centro': 'Centro','Material': '# material', 'Descripcion_material': 'Material', 'stock': 'Cantidad (Un)', 'valor_lista': 'Precio de venta'
 }
 
 COLUMNAS_v_inventario_t = [
