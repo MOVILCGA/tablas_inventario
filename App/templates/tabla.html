@@ -158,6 +158,15 @@
                 inputmode="numeric"
               />
             </div>
+            <div class="form-group">
+              <label for="advDim1">DIM1</label>
+              <input
+                type="text"
+                id="advDim1"
+                placeholder="Ejm. 3, 4.5, 6..."
+                autocomplete="off"
+              />
+            </div>
 
             <div class="modal-avanzado-buttons">
               <button type="submit" class="boton-buscar">Buscar</button>
@@ -508,7 +517,7 @@
           const json = await resp.json();
 
           if (json.results) {
-            // renderizarDatos(json);
+            renderizarDatos(json);
 
             // Remover botón Regresar si existe
             const contenedorRegresar = document.getElementById(
@@ -976,6 +985,7 @@
         const data = {
           material: document.getElementById("advMaterial").value.trim(),
           advDesMAterial: descMaterialValue,
+          dim1: document.getElementById("advDim1").value.trim(),
           pagina: 1, // Iniciar en página 1
         };
 
@@ -991,17 +1001,30 @@
         let json = await resp.json();
 
         // Por esto (Búsqueda parcial):
-        if (data.material !== "") {
-          json.results = json.results.filter((item) => {
-            return (
-              String(item.Material || item.material).trim() ===
-              String(data.material).trim()
-            );
-          });
+        json.results = json.results.filter((item) => {
+          let cumple = true;
 
-          json.total_paginas = json.results.length > 0 ? 1 : 0;
-          totalPaginasBusqueda = json.total_paginas;
-        }
+          // Filtro por material
+          if (data.material !== "") {
+            cumple =
+              cumple &&
+              String(item.CODIGO_MATERIAL || "").trim() ===
+                String(data.material).trim();
+          }
+
+          // Filtro por DIM1
+          if (data.dim1 !== "") {
+            cumple =
+              cumple &&
+              String(item.DIM1 || "").trim() === String(data.dim1).trim();
+          }
+
+          return cumple;
+        });
+
+        // Ajustar paginación
+        json.total_paginas = json.results.length > 0 ? 1 : 0;
+        totalPaginasBusqueda = json.total_paginas;
 
         // Guardar estado de búsqueda
         busquedaActual = data;

@@ -221,12 +221,11 @@ COLUMNAS_aitv = [
 ]
 
 ALIAS_aitv = {
-    'Centro': 'Centro','Material': '# material', 'Descripcion_material': 'Material', 'stock': 'Cantidad (Un)', 'valor_lista': 'Precio de venta'
+    'Centro': 'Centro','Material': '# material', 'Descripcion_material': 'Material', 'stock': 'Cantidad (Un)', 'valor_lista': 'Precio de venta por und'
 }
 
 COLUMNAS_v_inventario_t = [
     "CENTRO",
-    "NOMBRE_CENTRO",
     "ALMACEN",
     "NOMBRE_ALMACEN",
     "CODIGO_MATERIAL",
@@ -234,11 +233,15 @@ COLUMNAS_v_inventario_t = [
     "LOTE",
     "STOCK",
     "UNIDAD_MEDIDA",
+    "DIM1",
+    "DIM2",
+    "DIM3",
+    "Stock_Kilos",
+    
 ]
 
 ALIAS_v_inventario_t = {
     "CENTRO": "Centro",
-    "NOMBRE_CENTRO": "Nombre centro",
     "ALMACEN": "Almacén",
     "NOMBRE_ALMACEN": "Nombre almacén",
     "CODIGO_MATERIAL": "Código material",
@@ -262,13 +265,14 @@ ALIAS_ai_eop = {
     "VDATU1": "Pref. Entrega inicial","FH_CR_TRAS": "Inicio transp.", "FH_FIN_TRAS": "Fin trasnp."
 }
 # definición de columnas numéricas y de fecha para cada tabla
-numeric_cols_aitv = ['Centro', 'Material', 'stock']
+numeric_cols_aitv = ['Centro', 'Material', 'stock', 'valor_lista']
 date_cols_aitv = []
 numeric_cols_v_inventario_t = [
     "CENTRO",
     "ALMACEN",
+    "CODIGO_MATERIAL",
+    "LOTE",
     "STOCK",
-    "COSTO"
 ]
 
 date_cols_v_inventario_t = []
@@ -321,7 +325,7 @@ def seleccion_db():
         return "Error: Base de datos no válida", 400
     
     if tabla_seleccionada == 'inventario':
-        sql = f"select {', '.join(COLUMNAS_aitv)} from inventario limit 100"
+        sql = f"SELECT {', '.join(COLUMNAS_aitv)} FROM v_inventario_pt_mercaderia WHERE valor_lista > 0 LIMIT 100"
         nombres_columnas = [ALIAS_aitv.get(col, col) for col in COLUMNAS_aitv]
     elif tabla_seleccionada == 'inventario_t':
             sql = f"select {', '.join(COLUMNAS_v_inventario_t)} from v_inventario_t limit 100"
@@ -350,7 +354,10 @@ def seleccion_db():
             table = "v_inventario_t"
         else:
             table = "ztbsd_seg_ped"
-        cursor.execute(f"SELECT COUNT(*) FROM {table}")
+        if tabla_seleccionada == 'inventario':
+             cursor.execute(f"SELECT COUNT(*) FROM v_inventario_pt_mercaderia WHERE valor_lista > 0")
+        else:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
         total_filas = cursor.fetchone()[0]
         total_paginas = math.ceil(total_filas / 100)
         
@@ -384,7 +391,7 @@ def obtener_tabla(tabla_id):
     
     if tabla_id == 'inventario':
         cols = COLUMNAS_aitv
-        table = "inventario"
+        table = "v_inventario_pt_mercaderia"
         numeric_cols = numeric_cols_aitv
         date_cols = date_cols_aitv
         nombres_columnas = [ALIAS_aitv.get(col, col) for col in cols]
@@ -408,16 +415,25 @@ def obtener_tabla(tabla_id):
     if orden_dir not in ['ASC', 'DESC']:
         orden_dir = 'ASC'
     
-    # Contar total de filas
-    count_sql = f"SELECT COUNT(*) FROM {table}"
     try:
         conn = MySQLdb.connect(**config)
         cursor = conn.cursor()
+        
+        # -------------------------
+        # CONTAR FILAS
+        # -------------------------
+        if tabla_id == "inventario":
+            count_sql = f"SELECT COUNT(*) FROM {table} WHERE valor_lista IS NOT NULL AND valor_lista > 0"
+        else:
+            count_sql = f"SELECT COUNT(*) FROM {table}"
+        
         cursor.execute(count_sql)
         total_filas = cursor.fetchone()[0]
         total_paginas = math.ceil(total_filas / limit)
         
-        # Obtener datos paginados
+        # -------------------------
+        # ORDENAMIENTO
+        # -------------------------
         order_clause = ""
         if orden_col and orden_col in cols:
             if orden_col in numeric_cols:
@@ -427,23 +443,44 @@ def obtener_tabla(tabla_id):
             else:
                 order_clause = f"ORDER BY {orden_col} {orden_dir}"
         
+        # -------------------------
+        # QUERY FINAL
+        # -------------------------
+        if tabla_id == "inventario":
+            sql = f"""
+            SELECT {', '.join(cols)}
+            FROM {table}
+            WHERE valor_lista IS NOT NULL AND valor_lista > 0
+            {order_clause}
+            LIMIT {limit} OFFSET {offset}
+            """
+        else:
+            sql = f"""
+            SELECT {', '.join(cols)}
+            FROM {table}
+            {order_clause}
+            LIMIT {limit} OFFSET {offset}
+            """
+        
+        cursor.execute(sql)
+        filas = cursor.fetchall()
+        
         results = []
-        if True:
-            if orden_col:
-                # Si hay orden, devolver todos los datos sin paginación
-                sql = f"SELECT {', '.join(cols)} FROM {table} {order_clause}"
-            else:
-                sql = f"SELECT {', '.join(cols)} FROM {table} {order_clause} LIMIT {limit} OFFSET {offset}"
-            cursor.execute(sql)
-            filas = cursor.fetchall()
-            results = []
-            for fila in filas:
-                obj = {cols[i]: (str(fila[i]) if fila[i] is not None else "") for i in range(len(cols))}
-                results.append(obj)
+        for fila in filas:
+            obj = {cols[i]: (str(fila[i]) if fila[i] is not None else "") for i in range(len(cols))}
+            results.append(obj)
         
         cursor.close()
         conn.close()
-        return jsonify({'results': results, 'column_order': cols, 'nombres_columnas': nombres_columnas, 'total_paginas': total_paginas, 'pagina_actual': pagina})
+        
+        return jsonify({
+            'results': results,
+            'column_order': cols,
+            'nombres_columnas': nombres_columnas,
+            'total_paginas': total_paginas,
+            'pagina_actual': pagina
+        })
+    
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -452,108 +489,152 @@ def obtener_tabla(tabla_id):
 @app.route('/buscar_avanzado/<string:tabla_nombre>', methods=['POST'])
 def buscar_avanzado(tabla_nombre):
     print("TABLA RECIBIDA >>>", tabla_nombre)
-    # Realiza busqueda para saber a qué base de datos conectar
-    mapa_tablas = {'inventario': 'aitv','inventario_t': 'aitv','ztbsd_seg_ped': 'ai_eop'}
+
+    mapa_tablas = {
+        'inventario': 'aitv',
+        'inventario_t': 'aitv',
+        'ztbsd_seg_ped': 'ai_eop'
+    }
     db_actual = mapa_tablas.get(tabla_nombre, 'aitv')
     
     config = get_db_config(db_actual)
     data = request.get_json() or {}
+
+    print("DATA >>>", data)  # 🔥 DEBUG
+
     clauses = []
     params = []
 
-    # Parámetros de paginación
+    # Paginación
     pagina = int(data.get('pagina', 1))
     limit = 100
     offset = (pagina - 1) * limit
 
-    # Determinamos columnas y tabla real según el ID
+    # -------------------------
+    # INVENTARIO PT
+    # -------------------------
     if tabla_nombre == 'inventario':
         cols = COLUMNAS_aitv
-        table = "inventario"
+        table = "v_inventario_pt_mercaderia"
         nombres_columnas = [ALIAS_aitv.get(col, col) for col in cols]
-        # Filtro por descripción de material (Descripcion_material)
-        if data.get('advDesMAterial'):
-            clauses.append("UPPER(Descripcion_material) LIKE UPPER(%s)")
+
+        if data.get('advDesMAterial') and data['advDesMAterial'].strip():
+            clauses.append("UPPER(DESCRIPCION_MATERIAL) LIKE UPPER(%s)")
             params.append(f"%{data['advDesMAterial'].strip()}%")
-        # Filtro por código de material (Material)
-        if data.get('material'):
-            clauses.append("UPPER(Material) LIKE UPPER(%s)")
-            params.append(f"%{data['material'].strip()}%")
+
+        if data.get('material') and data['material'].strip():
+            material = data['material'].strip()
+            print("MATERIAL >>>", material)  # 🔥 DEBUG
+
+            try:
+                clauses.append("CODIGO_MATERIAL = %s")
+                params.append(int(material))
+            except:
+                # fallback por si viene raro
+                clauses.append("CAST(CODIGO_MATERIAL AS CHAR) LIKE %s")
+                params.append(f"%{material}%")
+
+    # -------------------------
+    # INVENTARIO GENERAL
+    # -------------------------
     elif tabla_nombre == 'inventario_t':
         cols = COLUMNAS_v_inventario_t
         table = "v_inventario_t"
         nombres_columnas = [ALIAS_v_inventario_t.get(col, col) for col in cols]
-        # Filtro por descripción de material (Descripcion_material)
-        if data.get('advDesMAterial'):
-            clauses.append("UPPER(Descripcion_material) LIKE UPPER(%s)")
+        if data.get('dim1'):
+            clauses.append("DIM1 = %s")
+            params.append(data['dim1'])
+
+        if data.get('advDesMAterial') and data['advDesMAterial'].strip():
+            clauses.append("UPPER(DESCRIPCION_MATERIAL) LIKE UPPER(%s)")
             params.append(f"%{data['advDesMAterial'].strip()}%")
-        # Filtro por código de material (Material)
-        if data.get('material'):
-            clauses.append("UPPER(Material) LIKE UPPER(%s)")
-            params.append(f"%{data['material'].strip()}%")
-        
-    else: 
-        # Determinar si se busca por cliente
-        busca_por_cliente = bool(data.get('name1'))
-        
-        # SIEMPRE incluir NAME1 en las columnas para poder obtener el nombre del cliente
-        # El frontend lo excluirá de la visualización cuando se busque por cliente
-        # Insertar NAME1 justo después de KUNNR (# Cliente)
+
+        if data.get('material') and data['material'].strip():
+            material = data['material'].strip()
+            print("MATERIAL >>>", material)  # 🔥 DEBUG
+
+            try:
+                clauses.append("CODIGO_MATERIAL = %s")
+                params.append(int(material))
+            except:
+                clauses.append("CAST(CODIGO_MATERIAL AS CHAR) LIKE %s")
+                params.append(f"%{material}%")
+
+    # -------------------------
+    # SEGUIMIENTO PEDIDOS
+    # -------------------------
+    else:
         cols = COLUMNAS_ai_eop.copy()
+
         if "KUNNR" in cols:
             kunnr_index = cols.index("KUNNR")
             cols.insert(kunnr_index + 1, "NAME1")
         else:
             cols.append("NAME1")
-        
+
         table = "ztbsd_seg_ped"
         nombres_columnas = [ALIAS_ai_eop.get(col, col) for col in cols]
-        # Agregar alias para NAME1
+
         if "NAME1" in cols:
             nombres_columnas[cols.index("NAME1")] = "Cliente"
-        
-        # Filtro por cliente (NAME1)
-        if data.get('name1'):
+
+        if data.get('name1') and data['name1'].strip():
             clauses.append("UPPER(NAME1) LIKE UPPER(%s)")
             params.append(f"%{data['name1'].strip()}%")
-        # Filtro por rango de fechas (ERDAT)
-        if data.get('fecha_inicio'):
+
+        if data.get('fecha_inicio') and data['fecha_inicio'].strip():
             clauses.append("ERDAT >= %s")
             params.append(data['fecha_inicio'].strip())
-        if data.get('fecha_fin'):
+
+        if data.get('fecha_fin') and data['fecha_fin'].strip():
             clauses.append("ERDAT <= %s")
             params.append(data['fecha_fin'].strip())
-        # Filtro por número de pedido (VBELN)
-        if data.get('vbeln'):
+
+        if data.get('vbeln') and data['vbeln'].strip():
             clauses.append("VBELN = %s")
             params.append(data['vbeln'].strip())
 
+    # -------------------------
+    # QUERY FINAL
+    # -------------------------
     if not clauses:
         count_sql = f"SELECT COUNT(*) FROM {table}"
         sql = f"SELECT {', '.join(cols)} FROM {table} LIMIT {limit} OFFSET {offset}"
     else:
-        count_sql = f"SELECT COUNT(*) FROM {table} WHERE " + " AND ".join(clauses)
-        sql = f"SELECT {', '.join(cols)} FROM {table} WHERE " + " AND ".join(clauses) + f" LIMIT {limit} OFFSET {offset}"
+        where_clause = " AND ".join(clauses)
+        count_sql = f"SELECT COUNT(*) FROM {table} WHERE {where_clause}"
+        sql = f"""
+            SELECT {', '.join(cols)}
+            FROM {table}
+            WHERE {where_clause}
+            LIMIT {limit} OFFSET {offset}
+        """
+
+    print("SQL >>>", sql)        # 🔥 DEBUG
+    print("PARAMS >>>", params)  # 🔥 DEBUG
+
     try:
         conn = MySQLdb.connect(**config)
         cursor = conn.cursor()
 
-        # Obtener total de resultados
         cursor.execute(count_sql, tuple(params))
         total_filas = cursor.fetchone()[0]
         total_paginas = math.ceil(total_filas / limit)
- 
-        # Obtener resultados paginados
+
         cursor.execute(sql, tuple(params))
         filas = cursor.fetchall()
- 
+
         resultados = []
         for fila in filas:
-            obj = {cols[i]: (str(fila[i]) if fila[i] is not None else "") for i in range(len(cols))}
+            obj = {
+                cols[i]: (str(fila[i]) if fila[i] is not None else "")
+                for i in range(len(cols))
+            }
             resultados.append(obj)
- 
+
         cursor.close()
         conn.close()
+
         return jsonify({
             'results': resultados,
             'column_order': cols,
@@ -562,8 +643,10 @@ def buscar_avanzado(tabla_nombre):
             'pagina_actual': pagina,
             'initial': False
         })
+
     except Exception as e:
-        raise e
+        print("ERROR >>>", e)
+        return jsonify({'error': str(e)}), 500
  
  
 # Conexion establecida entre los nombres de los clientes de ai_eop
